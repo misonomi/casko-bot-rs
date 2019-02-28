@@ -1,0 +1,8 @@
+[package]
+edition = '2018'
+name = "casko-bot-rs"
+version = "0.0.1"
+authors = [ "misonomi <misonomi0612@gmail.com>" ]
+
+[dependencies]
+serenity = { git = "https://github.com/serenity-rs/serenity" }
