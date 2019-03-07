@@ -5,7 +5,7 @@ use serenity::{
     prelude::{Context, EventHandler},
 };
 
-mod talk;
+pub mod talk;
 mod watch;
 
 pub struct Handler;
@@ -20,18 +20,22 @@ impl EventHandler for Handler {
             talk::help(&msg);
         }
         if msg.content == format!("{}watchme", prefix) {
-            watch::watch(&msg);
+            watch::watch(&msg.author);
         }
         if msg.content == format!("{}unwatchme", prefix) {
-            watch::unwatch(&msg);
+            watch::unwatch(&msg.author);
         }
         if msg.content == format!("{}status", prefix) {
             talk::status(&msg);
+        }
+        if msg.content == format!("{}list", prefix) {
+            watch::list();
         }
     }
 
     // reaction for user login
     fn ready(&self, _: Context, ready: Ready) {
+        //talk::welcome(&ready.user);
     }
 
     // reaction for status update
