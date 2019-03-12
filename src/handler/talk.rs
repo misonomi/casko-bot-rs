@@ -1,26 +1,16 @@
-use serenity::model::{ channel::Message, user::User };
+use serenity::model::{ channel::Message };
 
 use crate::watchees::*;
+use super::util::{ dm_facade, talk_facade };
 
 pub fn help(msg: &Message) {
-    if let Err(cause) = msg.author.dm(|m| m.content("*help*")) {
-        println!("Error when direct messaging user: {:?}", cause);
-    }
-    if let Err(cause) = msg.channel_id.say("sent help to your direct message") {
-        println!("Error when direct messaging user: {:?}", cause);
-    }
+    dm_facade(&msg.author, "*help*");
+    talk_facade(&msg.channel_id, "sent help to you by direct message");
 }
 
 pub fn status(msg: &Message) {
-    if let Err(cause) = msg.channel_id.say("sent help to your direct message") {
-        println!("Error when direct messaging user: {:?}", cause);
-    }
-}
-
-pub fn welcome(user: &User) {
-    if has_watchee(user.id.as_u64()).is_some() {
-        if let Err(cause) = user.dm(|m| m.content("*help*")) {
-            println!("Error when direct messaging user: {:?}", cause);
-        }
-    }
+    talk_facade(&msg.channel_id, match has_watchee(&msg.author.id) {
+        Some(_) => "I'm watching you.",
+        None => "I'm not watching you."
+    });
 }
