@@ -35,6 +35,9 @@ pub fn stat_update(presence: &Presence) {
 // TODO remove when release 
 // list up watchee id 
 pub fn list() {
-    
+    for (i, watchee) in get_watchlist().iter().enumerate() {
+        println!("watchees No.{}| id:{:?}, status:{:?}, game:{:?}, timestamp:{:?}", 
+                i, watchee.id_as_u64(), watchee.stat_as_enum(), watchee.game_as_string(), watchee.timestamp_as_instant());
+    }
 }
 

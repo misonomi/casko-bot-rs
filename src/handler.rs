@@ -34,7 +34,7 @@ impl EventHandler for Handler {
         match game_changed(&event.presence.user_id, &event.presence.game) {
             Ok(true) => watch::stat_update(&event.presence),
             Ok(false) => (),
-            Err(_) => ()
+            Err(cause) => println!("Error when obtaining status change info: {:?}", cause)
         }
     }
 }

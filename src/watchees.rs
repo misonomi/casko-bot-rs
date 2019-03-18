@@ -1,6 +1,6 @@
 use std::fs::File;
 use std::io::{ BufReader, BufRead, Error };
-use std::sync::Mutex;
+use std::sync::{ Mutex, MutexGuard };
 use std::time::Instant;
 use lazy_static::lazy_static;
 
@@ -15,8 +15,26 @@ pub struct Watchee {
     last_update: Instant
 }
 
+impl Watchee {
+    pub fn id_as_u64(&self) -> &u64 {
+        &self.id.as_u64()
+    }
+    pub fn stat_as_enum(&self) -> &stat::BondType {
+        &self.stat
+    }
+    pub fn game_as_string(&self) -> Option<&String> {
+        match &self.game {
+            Some(game) => Some(&game.name),
+            None => None
+        }
+    }
+    pub fn timestamp_as_instant(&self) -> &Instant {
+        &self.last_update
+    }
+}
+
 lazy_static! {
-    static ref WATCHEES: Mutex<Vec<Watchee>> = {
+    static ref WATCHELIST: Mutex<Vec<Watchee>> = {
         let mut watchlist = Vec::new();
         
         let watchee_reader = BufReader::new(File::open("watchees.dat").expect("no file: 'watchees.dat'"));
@@ -51,7 +69,7 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Watchee> {
 
 pub fn add_watchee(id: &UserId) -> Result<usize, usize> {
     if has_watchee(id).is_none() {
-        let mut watchees_guarded = WATCHEES.lock().unwrap();
+        let mut watchees_guarded = WATCHELIST.lock().unwrap();
         watchees_guarded.push(Watchee{ id: *id, stat: stat::BondType::normal, game: None, last_update: Instant::now() });
         Ok(watchees_guarded.capacity())
     } else {
@@ -60,17 +78,20 @@ pub fn add_watchee(id: &UserId) -> Result<usize, usize> {
 }
 
 pub fn remove_watchee(id: &UserId) -> Result<usize, usize> {
-    let pos = has_watchee(id);
-    if pos.is_some() {
-        WATCHEES.lock().unwrap().remove(pos.unwrap());
-        Ok(pos.unwrap())
+    if let Some(pos) = has_watchee(id) {
+        WATCHELIST.lock().unwrap().remove(pos);
+        Ok(pos)
     } else {
         Err(0)
     }
 }
 
+pub fn get_watchlist() -> MutexGuard<'static, Vec<Watchee>> {
+    WATCHELIST.lock().unwrap()
+}
+
 pub fn has_watchee(id: &UserId) -> Option<usize> {
-    WATCHEES.lock().unwrap().iter().position(|x| x.id.as_u64() == id.as_u64() )
+    WATCHELIST.lock().unwrap().iter().position(|x| *x.id.as_u64() == *id.as_u64() )
 }
 
 pub fn game_changed(id: &UserId, game: &Option<Game>) -> Result<bool, Error> {
