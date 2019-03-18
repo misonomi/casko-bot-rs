@@ -1,16 +1,16 @@
 #[derive(Debug)]
 pub enum BondType {
-    normal,
-    intimate,
-    admin,
-    unknown
+    Normal,
+    Intimate,
+    Admin,
+    Unknown
 }
 
 pub fn bond_from(id: u8) -> BondType {
     match id {
-        1 => BondType::normal,
-        2 => BondType::intimate,
-        0 => BondType::admin,
-        _ => BondType::unknown
+        1 => BondType::Normal,
+        2 => BondType::Intimate,
+        0 => BondType::Admin,
+        _ => BondType::Unknown
     }
 }

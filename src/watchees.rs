@@ -70,7 +70,7 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Watchee> {
 pub fn add_watchee(id: &UserId) -> Result<usize, usize> {
     if has_watchee(id).is_none() {
         let mut watchees_guarded = WATCHELIST.lock().unwrap();
-        watchees_guarded.push(Watchee{ id: *id, stat: stat::BondType::normal, game: None, last_update: Instant::now() });
+        watchees_guarded.push(Watchee{ id: *id, stat: stat::BondType::Normal, game: None, last_update: Instant::now() });
         Ok(watchees_guarded.capacity())
     } else {
         Err(0)
