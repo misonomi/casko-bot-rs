@@ -30,11 +30,11 @@ impl EventHandler for Handler {
     }
 
     // reaction for status update
+    // TODO add more (havnt decided what)
     fn presence_update(&self, _: Context, event: PresenceUpdateEvent) {
-        match game_changed(&event.presence.user_id, &event.presence.game) {
-            Ok(true) => watch::stat_update(&event.presence),
-            Ok(false) => (),
-            Err(cause) => println!("Error when obtaining status change info: {:?}", cause)
+        let target_player = find_watchee(&event.presence.user_id);
+        if target_player.game_changed(&event.presence.game) {
+            watch::stat_update(&event.presence.game, &target_player)
         }
     }
 }

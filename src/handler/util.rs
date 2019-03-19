@@ -1,3 +1,5 @@
+use std::time::Instant;
+
 use serenity::model::{ id::ChannelId, user::User };
 
 pub fn dm_facade(user: &User, mes: &str) {
@@ -12,3 +14,6 @@ pub fn talk_facade(channel: &ChannelId, mes: &str) {
     }
 }
 
+pub fn minutes(from: &Instant) -> u64 {
+    from.elapsed().as_secs() / 60
+}
