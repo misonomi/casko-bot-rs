@@ -30,6 +30,7 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Watchee> {
         Ok(line) =>{
             let raw_props: Vec<&str> = line.split(":").collect();
             if raw_props.len() != 2 {
+                println!("failed to parse: invalid argc");
                 return None;
             }
             let u64id: u64 = raw_props[0].parse().expect("failed to parse userid");
