@@ -1,7 +1,7 @@
-use serenity::model::{ gateway::Game, user::User };
+use serenity::model::{ gateway::Game, user::User, channel::Message };
 
-use crate::watchees::{add_watchee, get_lock, remove_watchee, update_game, watchee::Watchee};
-use super::util::{ dm_facade, minutes };
+use crate::watchees::{ add_watchee, get_lock, remove_watchee, has_watchee, update_game, watchee::Watchee };
+use super::util::{ talk_facade, dm_facade, minutes };
 
 // change status of msg's author to watching and say so
 pub fn watch(user: &User) {
@@ -25,6 +25,13 @@ pub fn unwatch(user: &User) {
             dm_facade(user, "I'm not watching you.");
         }
     }
+}
+
+pub fn status(msg: &Message) {
+    talk_facade(&msg.channel_id, match has_watchee(&msg.author.id) {
+        Some(_) => "I'm watching you.",
+        None => "I'm not watching you."
+    });
 }
 
 // capture a watching player's status change and dm

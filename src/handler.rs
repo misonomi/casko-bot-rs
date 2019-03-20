@@ -10,6 +10,7 @@ use crate::watchees::*;
 mod talk;
 mod watch;
 mod util;
+mod art;
 
 pub struct Handler;
 
@@ -22,8 +23,10 @@ impl EventHandler for Handler {
                 "help" => talk::help(&msg),
                 "watchme" => watch::watch(&msg.author),
                 "unwatchme" => watch::unwatch(&msg.author),
-                "status" => talk::status(&msg),
+                "status" => watch::status(&msg),
                 "list" => watch::list(),
+                "whoami" => talk::whois(&msg),
+                "e" => art::random(&msg),
                 _ => ()
             }
         }
