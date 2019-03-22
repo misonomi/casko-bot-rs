@@ -31,6 +31,9 @@ impl Watchee {
     pub fn stat_as_enum(&self) -> &stat::BondType {
         &self.stat
     }
+    pub fn stat_as_u8(&self) -> u8 {
+        stat::bond_to(&self.stat)
+    }
     pub fn game_as_string(&self) -> Option<&String> {
         match &self.game {
             Some(game) => Some(&game.name),

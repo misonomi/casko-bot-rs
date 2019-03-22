@@ -1,5 +1,5 @@
-use std::fs::File;
-use std::io::{ BufReader, BufRead, Error };
+use std::fs::OpenOptions;
+use std::io::{ BufReader, BufRead, BufWriter, Write, Error };
 use std::sync::{ Mutex, MutexGuard };
 use lazy_static::lazy_static;
 
@@ -13,7 +13,7 @@ lazy_static! {
     static ref WATCHLIST: Mutex<Vec<Watchee>> = {
         let mut watchlist = Vec::new();
         
-        let watchee_reader = BufReader::new(File::open("watchees.dat").expect("no file: 'watchees.dat'"));
+        let watchee_reader = BufReader::new(OpenOptions::new().create_new(true).open("watchees.dat").expect("failed to open watchee file"));
         for raw_watchee in watchee_reader.lines() {
             if let Some(watchee) = interpret_line(&raw_watchee) {
                 watchlist.push(watchee);
@@ -83,4 +83,11 @@ pub fn update_game(target: &Watchee, game: Option<Game>) {
     // FIXME nanimo wakaran help  vvvvvvvv            vvvvvvvvvvvv
     let target = watchlist_locked.iter_mut().find(|x| x == &target).unwrap();
     target.update_game(game);
+}
+
+pub fn save() {
+    let mut watchee_writer = BufWriter::new(OpenOptions::new().write(true).open("watchees.dat").expect("failed to open watchee file"));
+    for watchee in get_lock().iter() {
+        watchee_writer.write(format!("{}:{}", watchee.id_as_u64(), watchee.stat_as_u8()).as_bytes()).expect("failed on wirte");
+    }
 }

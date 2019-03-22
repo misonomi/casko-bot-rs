@@ -1,7 +1,7 @@
 // look out this file to know what this bot do
 
 use serenity::{
-    model::{channel::Message, event::PresenceUpdateEvent },
+    model::{channel::Message, event::PresenceUpdateEvent, gateway::Ready, gateway::Game, user::OnlineStatus },
     prelude::{Context, EventHandler},
 };
 
@@ -27,6 +27,8 @@ impl EventHandler for Handler {
                 "list" => watch::list(),
                 "whoami" => talk::whois(&msg),
                 "e" => art::random(&msg),
+                // temporal solution
+                "save" => crate::watchees::save(),
                 _ => ()
             }
         }
@@ -39,5 +41,9 @@ impl EventHandler for Handler {
         if target_player.game_changed(&event.presence.game) {
             watch::stat_update(&event.presence.game, &target_player)
         }
+    }
+
+    fn ready(&self, ctx: Context, _data_about_bot: Ready) {
+        ctx.shard.set_presence(Some(Game::playing("Fate/EXTRA")), OnlineStatus::Online);
     }
 }
