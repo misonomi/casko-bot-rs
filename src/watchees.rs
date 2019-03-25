@@ -44,6 +44,7 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Watchee> {
     }
 }
 
+// TODO propergate result
 pub fn get_lock<'a>() -> MutexGuard<'a, Vec<Watchee>> {
     WATCHLIST.lock().expect("failed to obtain lock")
 }

@@ -1,7 +1,11 @@
 // look out this file to know what this bot do
 
 use serenity::{
-    model::{channel::Message, event::PresenceUpdateEvent, gateway::Ready, gateway::Game, user::OnlineStatus },
+    model::{
+        channel::Message, 
+        event::PresenceUpdateEvent, 
+        gateway::{ Ready, Game, Presence }, 
+        user::OnlineStatus },
     prelude::{Context, EventHandler},
 };
 
@@ -29,8 +33,16 @@ impl EventHandler for Handler {
                 "e" => art::random(&msg),
                 // temporal solution
                 "save" => crate::watchees::save(),
-                _ => ()
+                _ => talk::dunno(&msg)
             }
+        }
+    }
+
+    // test
+    fn presence_replace(&self, _: Context, presences: Vec<Presence>) {
+        println!("presence replace caught:");
+        for (i, presence) in presences.iter().enumerate() {
+            println!("                {:?} | {:?}", i, presence);
         }
     }
 
