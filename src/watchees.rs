@@ -1,6 +1,7 @@
-use std::fs::OpenOptions;
+use std::fs::{ File, OpenOptions };
 use std::io::{ BufReader, BufRead, BufWriter, Write, Error };
 use std::sync::{ Mutex, MutexGuard };
+use std::path::Path;
 use lazy_static::lazy_static;
 
 use serenity::model::{ id::UserId, gateway::Game };
@@ -12,13 +13,19 @@ use watchee::Watchee;
 lazy_static! {
     static ref WATCHLIST: Mutex<Vec<Watchee>> = {
         let mut watchlist = Vec::new();
+
+        if !Path::new("watchees.dat").exists() {
+            File::create("watchees.dat").expect("failed to create watchee file");
+            println!("created watchees.dat");
+        }
         
-        let watchee_reader = BufReader::new(OpenOptions::new().create_new(true).open("watchees.dat").expect("failed to open watchee file"));
+        let watchee_reader = BufReader::new(OpenOptions::new().read(true).open("watchees.dat").expect("failed to open watchee file"));
         for raw_watchee in watchee_reader.lines() {
             if let Some(watchee) = interpret_line(&raw_watchee) {
                 watchlist.push(watchee);
             }
         }
+        println!("successflly loaded watchee list");
         Mutex::new(watchlist)
     };
 }
