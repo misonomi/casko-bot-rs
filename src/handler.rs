@@ -22,18 +22,20 @@ impl EventHandler for Handler {
     
     // reaction for messages
     fn message(&self, _: Context, msg: Message) {
-        if msg.is_private() {
-            match &*msg.content {
-                "help" => talk::help(&msg),
-                "watchme" => watch::watch(&msg.author),
-                "unwatchme" => watch::unwatch(&msg.author),
-                "status" => watch::status(&msg),
-                "list" => watch::list(),
-                "whoami" => talk::whois(&msg),
-                "e" => art::random(&msg),
-                // temporal solution
-                "save" => crate::watchees::save(),
-                _ => talk::dunno(&msg)
+        if !msg.author.bot {
+            if msg.is_private() {
+                match &*msg.content {
+                    "help" => talk::help(&msg),
+                    "watchme" => watch::watch(&msg.author),
+                    "unwatchme" => watch::unwatch(&msg.author),
+                    "status" => watch::status(&msg),
+                    "list" => watch::list(),
+                    "whoami" => talk::whois(&msg),
+                    "e" => art::random(&msg),
+                    // temporal solution
+                    "save" => crate::watchees::save(),
+                    _ => talk::dunno(&msg)
+                }
             }
         }
     }
