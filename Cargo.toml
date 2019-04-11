@@ -7,3 +7,4 @@ authors = [ "misonomi <misonomi0612@gmail.com>" ]
 [dependencies]
 serenity = { git = "https://github.com/serenity-rs/serenity" }
 lazy_static = "*"
+regex = "*"

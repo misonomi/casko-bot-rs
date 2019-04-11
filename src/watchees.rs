@@ -1,6 +1,6 @@
 use std::fs::{ File, OpenOptions };
 use std::io::{ BufReader, BufRead, BufWriter, Write, Error };
-use std::sync::{ Mutex, MutexGuard };
+use std::sync::{ Arc, Mutex, MutexGuard };
 use std::path::Path;
 use lazy_static::lazy_static;
 
@@ -11,7 +11,7 @@ pub mod watchee;
 use watchee::Watchee;
 
 lazy_static! {
-    static ref WATCHLIST: Mutex<Vec<Watchee>> = {
+    static ref WATCHLIST: Arc<Mutex<Vec<Watchee>>> = {
         let mut watchlist = Vec::new();
 
         if !Path::new("watchees.dat").exists() {
@@ -26,7 +26,7 @@ lazy_static! {
             }
         }
         println!("successflly loaded watchee list");
-        Mutex::new(watchlist)
+        Arc::new(Mutex::new(watchlist))
     };
 }
 
@@ -83,7 +83,7 @@ pub fn find_watchee<'a>(id: &UserId) -> Watchee {
 }
 
 pub fn has_watchee(id: &UserId) -> Option<usize> {
-    get_lock().iter().position(|x| *x.id_as_u64() == *id.as_u64() )
+    get_lock().iter().position(|x| x.id_as_u64() == *id.as_u64() )
 }
 
 pub fn update_game(target: &Watchee, game: Option<Game>) {

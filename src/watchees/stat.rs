@@ -25,3 +25,18 @@ pub fn bond_to(bond: &BondType) -> u8 {
         BondType::Unknown => MAX
     }
 }
+
+#[derive(Debug, Clone)]
+pub enum TalkSequence {
+    NONE,
+    ChooseDiff,
+}
+
+impl TalkSequence {
+    fn is_choose_diff(&self) -> bool {
+        match *self {
+            TalkSequence::ChooseDiff => true,
+            _ => false,
+        }
+    }
+}

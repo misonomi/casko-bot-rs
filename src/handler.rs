@@ -10,11 +10,13 @@ use serenity::{
 };
 
 use crate::watchees::*;
+use crate::utils::*;
 
 mod talk;
 mod watch;
 mod util;
 mod art;
+mod combat;
 
 pub struct Handler;
 
@@ -22,22 +24,16 @@ impl EventHandler for Handler {
     
     // reaction for messages
     fn message(&self, _: Context, msg: Message) {
-        if !msg.author.bot {
-            if msg.is_private() {
-                match &*msg.content {
-                    "help" => talk::help(&msg),
-                    "watchme" => watch::watch(&msg.author),
-                    "unwatchme" => watch::unwatch(&msg.author),
-                    "status" => watch::status(&msg),
-                    "list" => watch::list(),
-                    "whoami" => talk::whois(&msg),
-                    "e" => art::random(&msg),
-                    // temporal solution
-                    "save" => crate::watchees::save(),
-                    _ => talk::dunno(&msg)
-                }
-            }
+        if msg.author.bot { return; }
+        // to direct message
+        if msg.is_private() {
+            if command_handle(&msg, &*msg.content) { return; }
+            interactive_handle(&msg);
+        // to public message
+        } else {
+            interactive_handle(&msg);
         }
+        if command_handle_with_prefix(&msg) { return; }
     }
 
     // test
@@ -59,5 +55,53 @@ impl EventHandler for Handler {
 
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
         ctx.shard.set_presence(Some(Game::playing("Fate/EXTRA")), OnlineStatus::Online);
+    }
+}
+
+fn command_handle(msg: &Message, text: &str) -> bool {
+    match text {
+        "help" => talk::help(&msg),
+
+        "watchme" => watch::watch(&msg.author),
+        "unwatchme" => watch::unwatch(&msg.author),
+        "status" => watch::status(&msg),
+        "list" => watch::list(),
+
+        "whoami" => talk::whois(&msg),
+
+        "janken" => talk::command_battle(&msg),
+
+        "e" => art::random(&msg),
+        // temporal solution
+        "save" => crate::watchees::save(),
+
+        _ => return false
+    }
+    true
+}
+
+fn command_handle_with_prefix(msg: &Message) -> bool {
+    if let Some(text) = has_prefix(&*msg.content) {
+        if !command_handle(&msg, text) {
+            talk::dunno(&msg);
+        }
+        return true;
+    }
+    false
+}
+
+fn interactive_handle_core(msg: &Message, text: &str) -> bool {
+    match text {
+        "e" => combat::choose(&msg, combat::Difficulty::EASY),
+
+        _ => false
+    }
+}
+
+fn interactive_handle(msg: &Message) -> bool {
+    if let Some(text) = has_prefix(&*msg.content) {
+        return interactive_handle_core(msg, text);
+    } else {
+        return interactive_handle_core(msg, &*msg.content);
     }
 }

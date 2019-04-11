@@ -7,32 +7,36 @@ use super::stat;
 pub struct Watchee {
     id: UserId,
     stat: stat::BondType,
+    seq: stat::TalkSequence,
     game: Option<Game>,
     last_update: Instant
 }
 
 impl Watchee {
     pub fn new(id: UserId, stat: stat::BondType) -> Watchee {
-        Watchee{ id: id, stat: stat, game: None, last_update: Instant::now() }
+        Watchee{ id: id, stat: stat, seq: stat::TalkSequence::NONE, game: None, last_update: Instant::now() }
     }
-    pub fn incarnate(id: UserId, stat: stat::BondType, game: Option<Game>, timestamp: Instant) -> Watchee {
-        Watchee{ id: id, stat: stat, game: game, last_update: timestamp }
+    pub fn incarnate(id: UserId, stat: stat::BondType, seq: stat::TalkSequence, game: Option<Game>, timestamp: Instant) -> Watchee {
+        Watchee{ id: id, stat: stat, seq: seq, game: game, last_update: timestamp }
     }
 
     pub fn to_user(&self) -> serenity::Result<User> {
         self.id.to_user()
     } 
-    pub fn id_as_u64(&self) -> &u64 {
-        &self.id.as_u64()
+    pub fn id_as_u64(&self) -> u64 {
+        *self.id.as_u64()
     }
-    pub fn id_as_id(&self) -> &UserId {
-        &self.id
+    pub fn id_as_id(&self) -> UserId {
+        self.id.clone()
     }
-    pub fn stat_as_enum(&self) -> &stat::BondType {
-        &self.stat
+    pub fn stat_as_enum(&self) -> stat::BondType {
+        self.stat.clone()
     }
     pub fn stat_as_u8(&self) -> u8 {
         stat::bond_to(&self.stat)
+    }
+    pub fn seq_as_enum(&self) -> stat::TalkSequence {
+        self.seq.clone()
     }
     pub fn game_as_string(&self) -> Option<&String> {
         match &self.game {
@@ -40,11 +44,11 @@ impl Watchee {
             None => None
         }
     }
-    pub fn game_as_option(&self) -> &Option<Game> {
-        &self.game
+    pub fn game_as_option(&self) -> Option<Game> {
+        self.game.clone()
     }
-    pub fn timestamp_as_instant(&self) -> &Instant {
-        &self.last_update
+    pub fn timestamp_as_instant(&self) -> Instant {
+        self.last_update.clone()
     }
 
     pub fn update_game(&mut self, game: Option<Game>) {
