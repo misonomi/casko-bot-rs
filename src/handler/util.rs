@@ -26,7 +26,7 @@ pub fn minutes(from: &Instant) -> u64 {
     from.elapsed().as_secs() / 60
 }
 
-pub fn has_prefix(mes: &str) -> Option<&str> {
+pub fn remove_prefix(mes: &str) -> Option<&str> {
     lazy_static! {
         static ref RE: Regex = Regex::new(r"^\s*\^\^~\s*(.*)").expect("wrong prefix!!!!!!!!!");
     }
@@ -56,6 +56,6 @@ mod test {
     }
 
     fn thp_core(str_in: &str, str_out: Option<&str>) {
-        assert_eq!(has_prefix(str_in), str_out);
+        assert_eq!(remove_prefix(str_in), str_out);
     }
 }

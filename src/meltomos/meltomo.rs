@@ -63,7 +63,7 @@ impl Meltomo {
         self.last_update = Instant::now()
     }
 
-    pub fn game_changed(&self, new_game: &Option<Game>) -> bool {
+    pub fn game_changed(&self, new_game: Option<&Game>) -> bool {
         if self.game.is_some() && new_game.is_some() {
             &self.game.as_ref().unwrap().name != &new_game.as_ref().unwrap().name
         } else if self.game.is_none() && new_game.is_none() {

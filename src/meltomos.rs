@@ -11,8 +11,8 @@ pub mod meltomo;
 use meltomo::Meltomo;
 
 lazy_static! {
-    static ref WATCHLIST: Arc<Mutex<Vec<Meltomo>>> = {
-        let mut watchlist = Vec::new();
+    static ref CONTACTS: Arc<Mutex<Vec<Meltomo>>> = {
+        let mut contacts = Vec::new();
 
         if !Path::new("meltomos.dat").exists() {
             File::create("meltomos.dat").expect("failed to create meltomo file");
@@ -22,11 +22,11 @@ lazy_static! {
         let meltomo_reader = BufReader::new(OpenOptions::new().read(true).open("meltomos.dat").expect("failed to open meltomo file"));
         for raw_meltomo in meltomo_reader.lines() {
             if let Some(meltomo) = interpret_line(&raw_meltomo) {
-                watchlist.push(meltomo);
+                contacts.push(meltomo);
             }
         }
         println!("successflly loaded meltomo list");
-        Arc::new(Mutex::new(watchlist))
+        Arc::new(Mutex::new(contacts))
     };
 }
 
@@ -53,43 +53,43 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Meltomo> {
 
 // TODO propergate result
 pub fn get_lock<'a>() -> MutexGuard<'a, Vec<Meltomo>> {
-    WATCHLIST.lock().expect("failed to obtain lock")
+    CONTACTS.lock().expect("failed to obtain lock")
 }
 
-pub fn add_meltomo(id: &UserId) -> Result<usize, usize> {
+pub fn add_meltomo(id: &UserId) -> Option<usize> {
     if has_meltomo(id).is_none() {
-        let mut meltomos_guarded = get_lock();
-        meltomos_guarded.push(Meltomo::new(*id, stat::BondType::Normal));
-        Ok(meltomos_guarded.capacity())
+        let mut contacts = get_lock();
+        contacts.push(Meltomo::new(*id, stat::BondType::Normal));
+        Some(contacts.capacity())
     } else {
-        Err(0)
+        None
     }
 }
 
-pub fn remove_meltomo(id: &UserId) -> Result<usize, usize> {
+pub fn remove_meltomo(id: &UserId) -> Option<usize> {
     if let Some(pos) = has_meltomo(id) {
         get_lock().remove(pos);
-        Ok(pos)
+        Some(pos)
     } else {
-        Err(0)
+        None
     }
 }
 
-pub fn find_meltomo(id: &UserId) -> Meltomo {
-    let watchlist_guarded = get_lock();
+pub fn find_meltomo(id: &UserId) -> Option<Meltomo> {
+    let contacts_guarded = get_lock();
     // FIXME TERRIBLE HORRIBLE NO GOOD VERY BAD HACK
-    watchlist_guarded.iter().find(|x| x.id_as_u64() == id.as_u64()).unwrap().incarnate()
+    contacts_guarded.iter().find(|x| x.id_as_u64() == id.as_u64()).map(|m| m.incarnate())
 }
 
 pub fn has_meltomo(id: &UserId) -> Option<usize> {
-    get_lock().iter().position(|x| x.id_as_u64() == id.as_u64() )
+    get_lock().iter().position(|x| x.id_as_u64() == id.as_u64())
 }
 
-pub fn update_game(target: &Meltomo, game: Option<Game>) {
-    let mut watchlist_locked = get_lock();
-    // FIXME nanimo wakaran help  vvvvvvvv            vvvvvvvvvvvv
-    let target = watchlist_locked.iter_mut().find(|x| x == &target).unwrap();
-    target.update_game(game);
+pub fn update_game(id: &UserId, game: Option<Game>) {
+    let mut contacts_locked = get_lock();
+    if let Some(target) = contacts_locked.iter_mut().find(|x| x.id_as_u64() == id.as_u64()) {
+        target.update_game(game);
+    }
 }
 
 pub fn save() {

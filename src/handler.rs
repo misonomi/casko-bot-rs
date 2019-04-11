@@ -46,10 +46,12 @@ impl EventHandler for Handler {
     // reaction for status update
     // TODO add more (havnt decided what)
     fn presence_update(&self, _: Context, event: PresenceUpdateEvent) {
-        let target_player = find_meltomo(&event.presence.user_id);
-        if target_player.game_changed(&event.presence.game) {
-            watch::stat_update(event.presence.game.as_ref(), &target_player)
+        if let Some(target_player) = find_meltomo(&event.presence.user_id) {
+            if target_player.game_changed(event.presence.game.as_ref()) {
+                watch::stat_update(event.presence.game.as_ref(), &target_player)
+            }
         }
+        
     }
 
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
@@ -80,13 +82,14 @@ fn command_handle(msg: &Message, text: &str) -> bool {
 }
 
 fn command_handle_with_prefix(msg: &Message) -> bool {
-    if let Some(text) = util::has_prefix(&*msg.content) {
+    if let Some(text) = util::remove_prefix(&*msg.content) {
         if !command_handle(&msg, text) {
             talk::dunno(&msg);
         }
-        return true;
+        true
+    } else {
+        false
     }
-    false
 }
 
 fn interactive_handle_core(msg: &Message, text: &str) -> bool {
@@ -98,7 +101,7 @@ fn interactive_handle_core(msg: &Message, text: &str) -> bool {
 }
 
 fn interactive_handle(msg: &Message) -> bool {
-    if let Some(text) = util::has_prefix(&*msg.content) {
+    if let Some(text) = util::remove_prefix(&*msg.content) {
         return interactive_handle_core(msg, text);
     } else {
         return interactive_handle_core(msg, &*msg.content);

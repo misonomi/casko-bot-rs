@@ -11,8 +11,6 @@ pub enum Difficulty {
 pub fn choose(msg: &Message, diffic: Difficulty) -> bool {
     /*
     if msg.author.
-    react_facade(msg, "");
-    dm_facade(&msg.author, "*help*");
     */
     true
 }
