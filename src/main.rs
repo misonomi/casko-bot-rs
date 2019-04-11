@@ -3,7 +3,6 @@ use serenity::client::Client;
 
 mod handler;
 mod meltomos;
-mod utils;
 
 pub fn main() {
     let token = env::var("CASKO_DISCORD_BOT_TOKEN").expect("set 'CASKO_DISCORD_BOT_TOKEN' to environment variable");

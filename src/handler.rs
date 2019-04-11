@@ -10,7 +10,6 @@ use serenity::{
 };
 
 use crate::meltomos::*;
-use crate::utils::*;
 
 mod talk;
 mod watch;
@@ -81,7 +80,7 @@ fn command_handle(msg: &Message, text: &str) -> bool {
 }
 
 fn command_handle_with_prefix(msg: &Message) -> bool {
-    if let Some(text) = has_prefix(&*msg.content) {
+    if let Some(text) = util::has_prefix(&*msg.content) {
         if !command_handle(&msg, text) {
             talk::dunno(&msg);
         }
@@ -99,7 +98,7 @@ fn interactive_handle_core(msg: &Message, text: &str) -> bool {
 }
 
 fn interactive_handle(msg: &Message) -> bool {
-    if let Some(text) = has_prefix(&*msg.content) {
+    if let Some(text) = util::has_prefix(&*msg.content) {
         return interactive_handle_core(msg, text);
     } else {
         return interactive_handle_core(msg, &*msg.content);
