@@ -4,7 +4,7 @@ use serenity::model::{ id::UserId, gateway::Game, user::User };
 
 use super::stat;
 
-pub struct Watchee {
+pub struct Meltomo {
     id: UserId,
     stat: stat::BondType,
     seq: stat::TalkSequence,
@@ -12,9 +12,9 @@ pub struct Watchee {
     last_update: Instant
 }
 
-impl Watchee {
-    pub fn new(id: UserId, stat: stat::BondType) -> Watchee {
-        Watchee{ 
+impl Meltomo {
+    pub fn new(id: UserId, stat: stat::BondType) -> Meltomo {
+        Meltomo{ 
             id: id, 
             stat: stat, 
             seq: stat::TalkSequence::NONE, 
@@ -23,8 +23,8 @@ impl Watchee {
         }
     }
 
-    pub fn incarnate(&self) -> Watchee {
-        Watchee{ 
+    pub fn incarnate(&self) -> Meltomo {
+        Meltomo{ 
             id: self.id.clone(), 
             stat: self.stat.clone(), 
             seq: self.seq.clone(),  
@@ -74,8 +74,8 @@ impl Watchee {
     }
 }
 
-impl PartialEq for Watchee {
-    fn eq(&self, target: &Watchee) -> bool {
+impl PartialEq for Meltomo {
+    fn eq(&self, target: &Meltomo) -> bool {
         self.id_as_u64() == target.id_as_u64()
     }
 }

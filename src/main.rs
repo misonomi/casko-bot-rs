@@ -2,7 +2,7 @@ use std::env;
 use serenity::client::Client;
 
 mod handler;
-mod watchees;
+mod meltomos;
 mod utils;
 
 pub fn main() {

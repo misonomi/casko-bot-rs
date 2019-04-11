@@ -9,7 +9,7 @@ use serenity::{
     prelude::{Context, EventHandler},
 };
 
-use crate::watchees::*;
+use crate::meltomos::*;
 use crate::utils::*;
 
 mod talk;
@@ -47,7 +47,7 @@ impl EventHandler for Handler {
     // reaction for status update
     // TODO add more (havnt decided what)
     fn presence_update(&self, _: Context, event: PresenceUpdateEvent) {
-        let target_player = find_watchee(&event.presence.user_id);
+        let target_player = find_meltomo(&event.presence.user_id);
         if target_player.game_changed(&event.presence.game) {
             watch::stat_update(event.presence.game.as_ref(), &target_player)
         }
@@ -73,7 +73,7 @@ fn command_handle(msg: &Message, text: &str) -> bool {
 
         "e" => art::random(&msg),
         // temporal solution
-        "save" => crate::watchees::save(),
+        "save" => crate::meltomos::save(),
 
         _ => return false
     }
