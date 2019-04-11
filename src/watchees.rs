@@ -75,15 +75,14 @@ pub fn remove_watchee(id: &UserId) -> Result<usize, usize> {
     }
 }
 
-pub fn find_watchee<'a>(id: &UserId) -> Watchee {
+pub fn find_watchee(id: &UserId) -> Watchee {
     let watchlist_guarded = get_lock();
-    let list = watchlist_guarded.iter().find(|x| x.id_as_u64() == id.as_u64()).unwrap();
     // FIXME TERRIBLE HORRIBLE NO GOOD VERY BAD HACK
-    Watchee::incarnate(*list.id_as_id(), (*list.stat_as_enum()).clone(), list.game_as_option().clone(), *list.timestamp_as_instant())
+    watchlist_guarded.iter().find(|x| x.id_as_u64() == id.as_u64()).unwrap().incarnate()
 }
 
 pub fn has_watchee(id: &UserId) -> Option<usize> {
-    get_lock().iter().position(|x| x.id_as_u64() == *id.as_u64() )
+    get_lock().iter().position(|x| x.id_as_u64() == id.as_u64() )
 }
 
 pub fn update_game(target: &Watchee, game: Option<Game>) {

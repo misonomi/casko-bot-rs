@@ -49,7 +49,7 @@ impl EventHandler for Handler {
     fn presence_update(&self, _: Context, event: PresenceUpdateEvent) {
         let target_player = find_watchee(&event.presence.user_id);
         if target_player.game_changed(&event.presence.game) {
-            watch::stat_update(&event.presence.game, &target_player)
+            watch::stat_update(event.presence.game.as_ref(), &target_player)
         }
     }
 

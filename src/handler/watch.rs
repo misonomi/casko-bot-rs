@@ -35,7 +35,7 @@ pub fn status(msg: &Message) {
 }
 
 // capture a watching player's status change and dm
-pub fn stat_update(game: &Option<Game>, player: &Watchee) {
+pub fn stat_update(game: Option<&Game>, player: &Watchee) {
     let user = &player.to_user().expect("failed to get user data");
     match (game, player.game_as_option()) {
         (Some(new_game), Some(old_game)) => {

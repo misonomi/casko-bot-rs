@@ -17,12 +17,12 @@ pub fn bond_from(id: u8) -> BondType {
     }
 }
 
-pub fn bond_to(bond: &BondType) -> u8 {
+pub fn bond_to(bond: &BondType) -> &u8 {
     match bond {
-        BondType::Normal => 1,
-        BondType::Intimate => 2,
-        BondType::Admin => 0,
-        BondType::Unknown => MAX
+        BondType::Normal => &1,
+        BondType::Intimate => &2,
+        BondType::Admin => &0,
+        BondType::Unknown => &MAX
     }
 }
 
