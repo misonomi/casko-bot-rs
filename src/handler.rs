@@ -9,13 +9,14 @@ use serenity::{
     prelude::{Context, EventHandler},
 };
 
-use crate::meltomos::*;
+use crate::meltomos;
 
 mod talk;
 mod watch;
 mod util;
 mod art;
-mod combat;
+pub mod combat;
+use combat::Difficulty;
 
 pub struct Handler;
 
@@ -26,13 +27,14 @@ impl EventHandler for Handler {
         if msg.author.bot { return; }
         // to direct message
         if msg.is_private() {
+            meltomos::add_meltomo(&msg.author.id);
             if command_handle(&msg, &*msg.content) { return; }
-            interactive_handle(&msg);
+            if interactive_handle(&msg) { return; }
         // to public message
         } else {
-            interactive_handle(&msg);
+            if interactive_handle(&msg) { return; }
         }
-        if command_handle_with_prefix(&msg) { return; }
+        command_handle_with_prefix(&msg);
     }
 
     // test
@@ -46,12 +48,12 @@ impl EventHandler for Handler {
     // reaction for status update
     // TODO add more (havnt decided what)
     fn presence_update(&self, _: Context, event: PresenceUpdateEvent) {
-        if let Some(target_player) = find_meltomo(&event.presence.user_id) {
+        let mut contacts_guarded = meltomos::get_lock();
+        if let Some(mut target_player) = meltomos::find_meltomo(&event.presence.user_id, &mut contacts_guarded) {
             if target_player.game_changed(event.presence.game.as_ref()) {
-                watch::stat_update(event.presence.game.as_ref(), &target_player)
+                watch::stat_update(event.presence.game.as_ref(), &mut target_player);
             }
         }
-        
     }
 
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
@@ -61,18 +63,18 @@ impl EventHandler for Handler {
 
 fn command_handle(msg: &Message, text: &str) -> bool {
     match text {
-        "help" => talk::help(&msg),
+        "help" => talk::help(msg),
 
-        "watchme" => watch::watch(&msg.author),
-        "unwatchme" => watch::unwatch(&msg.author),
-        "status" => watch::status(&msg),
+        "watchme" => watch::watch(msg),
+        "unwatchme" => watch::unwatch(msg),
+        "status" => watch::status(msg),
         "list" => watch::list(),
 
-        "whoami" => talk::whois(&msg),
+        "whoami" => talk::whois(msg),
 
-        "janken" => talk::command_battle(&msg),
+        "janken" => talk::command_battle(msg),
 
-        "e" => art::random(&msg),
+        "e" => art::random(msg),
         // temporal solution
         "save" => crate::meltomos::save(),
 
@@ -83,8 +85,9 @@ fn command_handle(msg: &Message, text: &str) -> bool {
 
 fn command_handle_with_prefix(msg: &Message) -> bool {
     if let Some(text) = util::remove_prefix(&*msg.content) {
+        meltomos::add_meltomo(&msg.author.id);
         if !command_handle(&msg, text) {
-            talk::dunno(&msg);
+            talk::dunno(msg);
         }
         true
     } else {
@@ -94,7 +97,12 @@ fn command_handle_with_prefix(msg: &Message) -> bool {
 
 fn interactive_handle_core(msg: &Message, text: &str) -> bool {
     match text {
-        "e" => combat::choose(&msg, combat::Difficulty::EASY),
+        "e" => combat::choose(msg, Difficulty::Easy),
+        "easy" => combat::choose(msg, Difficulty::Easy),
+        "n" => combat::choose(msg, Difficulty::Normal),
+        "normal" => combat::choose(msg, Difficulty::Normal),
+        "h" => combat::choose(msg, Difficulty::Hard),
+        "hard" => combat::choose(msg, Difficulty::Hard),
 
         _ => false
     }

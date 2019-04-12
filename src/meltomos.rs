@@ -6,7 +6,8 @@ use lazy_static::lazy_static;
 
 use serenity::model::{ id::UserId, gateway::Game };
 
-mod stat;
+pub mod stat;
+use stat::{ BondType, TalkSequence };
 pub mod meltomo;
 use meltomo::Meltomo;
 
@@ -42,7 +43,7 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Meltomo> {
             }
             let u64id: u64 = raw_props[0].parse().expect("failed to parse userid");
             let u8stat: u8 = raw_props[1].parse().expect("failed to parse stat");
-            Some(Meltomo::new(UserId::from(u64id), stat::bond_from(u8stat)))
+            Some(Meltomo::new(UserId::from(u64id), BondType::from(u8stat)))
         },
         Err(cause) => {
             println!("Error when reading meltomos: {:?}", cause);
@@ -51,7 +52,6 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Meltomo> {
     }
 }
 
-// TODO propergate result
 pub fn get_lock<'a>() -> MutexGuard<'a, Vec<Meltomo>> {
     CONTACTS.lock().expect("failed to obtain lock")
 }
@@ -66,28 +66,46 @@ pub fn add_meltomo(id: &UserId) -> Option<usize> {
     }
 }
 
-pub fn remove_meltomo(id: &UserId) -> Option<usize> {
-    if let Some(pos) = has_meltomo(id) {
-        get_lock().remove(pos);
-        Some(pos)
+pub fn watch(id: &UserId) -> Result<(), ()> {
+    let mut contacts_guard = get_lock();
+    if let Some(target) = find_meltomo(id, &mut contacts_guard) {
+        target.change_stat(BondType::Watching)
     } else {
-        None
+        contacts_guard.push(Meltomo::new(*id, stat::BondType::Watching));
+        Ok(())
     }
 }
 
-pub fn find_meltomo(id: &UserId) -> Option<Meltomo> {
-    let contacts_guarded = get_lock();
-    // FIXME TERRIBLE HORRIBLE NO GOOD VERY BAD HACK
-    contacts_guarded.iter().find(|x| x.id_as_u64() == id.as_u64()).map(|m| m.incarnate())
+pub fn unwatch(id: &UserId) -> Result<(), ()> {
+    let mut contacts_guard = get_lock();
+    if let Some(target) = find_meltomo(id, &mut contacts_guard) {
+        target.change_stat(BondType::Normal)
+    } else {
+        Err(())
+    }
+}
+
+pub fn find_meltomo<'a>(id: &UserId, contacts_guarded: &'a mut MutexGuard<'_, Vec<Meltomo>>) -> Option<&'a mut Meltomo> {
+    contacts_guarded.iter_mut().find(|x| x.has_id(id))
 }
 
 pub fn has_meltomo(id: &UserId) -> Option<usize> {
-    get_lock().iter().position(|x| x.id_as_u64() == id.as_u64())
+    get_lock().iter().position(|x| x.has_id(id))
+}
+
+pub fn is_seq(id: &UserId, seq: TalkSequence) -> bool {
+    get_lock().iter().find(|x| x.has_id(id) && x.seq == seq).is_some()
+}
+
+pub fn update_seq(id: &UserId, seq: TalkSequence) {
+    if let Some(target) = get_lock().iter_mut().find(|x| x.has_id(id)) {
+        target.seq = seq;
+    }
 }
 
 pub fn update_game(id: &UserId, game: Option<Game>) {
     let mut contacts_locked = get_lock();
-    if let Some(target) = contacts_locked.iter_mut().find(|x| x.id_as_u64() == id.as_u64()) {
+    if let Some(target) = contacts_locked.iter_mut().find(|x| x.has_id(id)) {
         target.update_game(game);
     }
 }
@@ -95,6 +113,6 @@ pub fn update_game(id: &UserId, game: Option<Game>) {
 pub fn save() {
     let mut meltomo_writer = BufWriter::new(OpenOptions::new().write(true).open("meltomos.dat").expect("failed to open meltomo file"));
     for meltomo in get_lock().iter() {
-        meltomo_writer.write(format!("{}:{}", meltomo.id_as_u64(), meltomo.stat_as_u8()).as_bytes()).expect("failed on wirte");
+        meltomo_writer.write(format!("{}:{}", meltomo.id.as_u64(), meltomo.stat.into_borrow()).as_bytes()).expect("failed on wirte");
     }
 }
