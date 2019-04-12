@@ -14,15 +14,20 @@ pub mod meltomo;
 use meltomo::Meltomo;
 
 lazy_static! {
+    static ref FILENAME: Arc<Mutex<String>> = {
+        Arc::new(Mutex::new(String::from("meltomos.dat")))
+    };
+
     static ref CONTACTS: Arc<Mutex<Vec<Meltomo>>> = {
         let mut contacts = Vec::new();
+        let filename = &*FILENAME.lock().expect("failed to lock filename");
 
-        if !Path::new("meltomos.dat").exists() {
-            File::create("meltomos.dat").expect("failed to create meltomo file");
+        if !Path::new(filename).exists() {
+            File::create(filename).expect("failed to create meltomo file");
             println!("created meltomos.dat");
         }
         
-        let meltomo_reader = BufReader::new(OpenOptions::new().read(true).open("meltomos.dat").expect("failed to open meltomo file"));
+        let meltomo_reader = BufReader::new(OpenOptions::new().read(true).open(filename).expect("failed to open meltomo file"));
         for raw_meltomo in meltomo_reader.lines() {
             if let Some(meltomo) = interpret_line(&raw_meltomo) {
                 contacts.push(meltomo);
@@ -48,7 +53,7 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Meltomo> {
             Some(Meltomo::new(UserId::from(u64id), BondType::from(u8stat)))
         },
         Err(cause) => {
-            println!("Error when reading meltomos: {:?}", cause);
+            println!("Error when reading line: {:?}", cause);
             None
         }
     }
@@ -135,8 +140,74 @@ pub fn list() {
 }
 
 pub fn save() {
-    let mut meltomo_writer = BufWriter::new(OpenOptions::new().write(true).open("meltomos.dat").expect("failed to open meltomo file"));
+    let filename = &*FILENAME.lock().expect("failed to lock filename");
+    let mut meltomo_writer = BufWriter::new(OpenOptions::new().write(true).open(filename).expect("failed to open meltomo file"));
     for meltomo in get_lock().iter() {
-        meltomo_writer.write(format!("{}:{}", meltomo.id.as_u64(), meltomo.stat.into_borrow()).as_bytes()).expect("failed on wirte");
+        meltomo_writer.write(format!("{}:{}\n", meltomo.id.as_u64(), meltomo.stat.into_borrow()).as_bytes()).expect("failed on wirte");
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    #[test]
+    fn test_basics() {
+        init();
+        test_add_meltomo(1, false);
+        test_add_meltomo(4, true);
+        test_add_meltomo(100, true);
+        test_has_meltomo(1, Some(0));
+        test_has_meltomo(3, Some(2));
+        test_has_meltomo(0, None);
+    }
+
+    #[test]
+    fn test_stat() {
+        init();
+    }
+
+    #[test]
+    fn test_io() {
+        // mendoi!!!!!
+        init();
+        save();
+        // look out output list
+    }
+
+    #[test]
+    #[ignore]
+    fn test_default_filename() {
+        assert_eq!(FILENAME.lock().unwrap().clone(), String::from("meltomos.dat"));
+    }
+
+    // assert can add -> o = true
+    fn test_add_meltomo(i: u64, o: bool) {
+        match o {
+            true => assert_ne!(add_meltomo(&uid(i)), None),
+            false => assert_eq!(add_meltomo(&uid(i)), None),
+        }
+    }
+
+    fn test_has_meltomo(i: u64, o: Option<usize>) {
+        assert_eq!(has_meltomo(&uid(i)), o);
+    }
+
+    fn init() {
+        {
+            let mut filename = FILENAME.lock().unwrap();
+            filename.clear();
+            filename.push_str("meltomos.dat.test");
+        }
+        {
+            let mut contacts = CONTACTS.lock().unwrap();
+            contacts.clear();
+        }
+        add_meltomo(&uid(1));
+        add_meltomo(&uid(2));
+        add_meltomo(&uid(3));
+    }
+
+    fn uid(num: u64) -> UserId {
+        UserId::from(num)
     }
 }
