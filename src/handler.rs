@@ -48,12 +48,7 @@ impl EventHandler for Handler {
     // reaction for status update
     // TODO add more (havnt decided what)
     fn presence_update(&self, _: Context, event: PresenceUpdateEvent) {
-        let mut contacts_guarded = meltomos::get_lock();
-        if let Some(mut target_player) = meltomos::find_meltomo(&event.presence.user_id, &mut contacts_guarded) {
-            if target_player.game_changed(event.presence.game.as_ref()) {
-                watch::stat_update(event.presence.game.as_ref(), &mut target_player);
-            }
-        }
+        watch::game_update(event.presence);
     }
 
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
@@ -68,15 +63,14 @@ fn command_handle(msg: &Message, text: &str) -> bool {
         "watchme" => watch::watch(msg),
         "unwatchme" => watch::unwatch(msg),
         "status" => watch::status(msg),
-        "list" => watch::list(),
-
-        "whoami" => talk::whois(msg),
 
         "janken" => talk::command_battle(msg),
 
         "e" => art::random(msg),
-        // temporal solution
-        "save" => crate::meltomos::save(),
+
+        "whoami" => talk::whois(msg),
+        "list" => watch::list(msg),
+        "save" => watch::save(msg),
 
         _ => return false
     }

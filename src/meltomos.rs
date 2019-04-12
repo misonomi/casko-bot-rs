@@ -1,4 +1,6 @@
 use std::fs::{ File, OpenOptions };
+use std::time::Instant;
+use std::mem;
 use std::io::{ BufReader, BufRead, BufWriter, Write, Error };
 use std::sync::{ Arc, Mutex, MutexGuard };
 use std::path::Path;
@@ -52,8 +54,12 @@ fn interpret_line(line: &Result<String, Error>) -> Option<Meltomo> {
     }
 }
 
-pub fn get_lock<'a>() -> MutexGuard<'a, Vec<Meltomo>> {
+fn get_lock<'a>() -> MutexGuard<'a, Vec<Meltomo>> {
     CONTACTS.lock().expect("failed to obtain lock")
+}
+
+fn find_meltomo<'a>(id: &UserId, contacts_guard: &'a mut MutexGuard<'_, Vec<Meltomo>>) -> Option<&'a mut Meltomo> {
+    contacts_guard.iter_mut().find(|x| x.has_id(id))
 }
 
 pub fn add_meltomo(id: &UserId) -> Option<usize> {
@@ -64,6 +70,15 @@ pub fn add_meltomo(id: &UserId) -> Option<usize> {
     } else {
         None
     }
+}
+
+// dont remove in case remove_meltomo revives
+pub fn has_meltomo(id: &UserId) -> Option<usize> {
+    get_lock().iter().position(|m| m.has_id(id))
+}
+
+pub fn conjecture_stat(id: &UserId, stat: BondType) -> bool {
+    get_lock().iter().find(|m| m.has_id(id) && m.stat == stat).is_some()
 }
 
 pub fn watch(id: &UserId) -> Result<(), ()> {
@@ -85,28 +100,37 @@ pub fn unwatch(id: &UserId) -> Result<(), ()> {
     }
 }
 
-pub fn find_meltomo<'a>(id: &UserId, contacts_guarded: &'a mut MutexGuard<'_, Vec<Meltomo>>) -> Option<&'a mut Meltomo> {
-    contacts_guarded.iter_mut().find(|x| x.has_id(id))
+pub fn get_stat(id: &UserId) -> Option<BondType> {
+    get_lock().iter().find(|m| m.has_id(id)).map(|m| m.stat.clone())
 }
 
-pub fn has_meltomo(id: &UserId) -> Option<usize> {
-    get_lock().iter().position(|x| x.has_id(id))
-}
-
-pub fn is_seq(id: &UserId, seq: TalkSequence) -> bool {
-    get_lock().iter().find(|x| x.has_id(id) && x.seq == seq).is_some()
+pub fn conjecture_seq(id: &UserId, seq: TalkSequence) -> bool {
+    get_lock().iter().find(|m| m.has_id(id) && m.seq == seq).is_some()
 }
 
 pub fn update_seq(id: &UserId, seq: TalkSequence) {
-    if let Some(target) = get_lock().iter_mut().find(|x| x.has_id(id)) {
+    if let Some(target) = get_lock().iter_mut().find(|m| m.has_id(id)) {
         target.seq = seq;
     }
 }
 
-pub fn update_game(id: &UserId, game: Option<Game>) {
+pub fn conjecture_game(id: &UserId, game: Option<&Game>) -> bool {
+    get_lock().iter().find(|m| m.has_id(id) && m.game_changed(game)).is_some()
+}
+
+pub fn exchange_game(id: &UserId, game: Option<Game>) -> (Option<Game>, Instant) {
     let mut contacts_locked = get_lock();
-    if let Some(target) = contacts_locked.iter_mut().find(|x| x.has_id(id)) {
-        target.update_game(game);
+    if let Some(target) = contacts_locked.iter_mut().find(|m| m.has_id(id)) {
+        (mem::replace(&mut target.game, game), mem::replace(&mut target.last_update, Instant::now()))
+    } else {
+        (game, Instant::now())
+    }
+}
+
+pub fn list() {
+    for (i, meltomo) in get_lock().iter().enumerate() {
+        println!("meltomos No.{}| id:{:?}, status:{:?}, sequence:{:?}, game:{:?}, timestamp:{:?}", 
+                i, meltomo.id, meltomo.stat, meltomo.seq, meltomo.game, meltomo.last_update);
     }
 }
 

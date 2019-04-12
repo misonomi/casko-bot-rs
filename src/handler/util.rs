@@ -22,7 +22,7 @@ pub fn react_facade(mes: &Message, unicode: &str) {
     }
 }
 
-pub fn minutes(from: &Instant) -> u64 {
+pub fn minutes(from: Instant) -> u64 {
     from.elapsed().as_secs() / 60
 }
 

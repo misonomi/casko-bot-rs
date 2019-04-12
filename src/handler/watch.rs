@@ -1,6 +1,7 @@
-use serenity::model::{ gateway::Game, channel::Message };
+use serenity::model::{ gateway::Presence, channel::Message };
 
 use crate::meltomos;
+use crate::meltomos::stat::BondType;
 use super::util::{ talk_facade, dm_facade, minutes };
 
 // change status of msg's author to watching and say so
@@ -20,37 +21,41 @@ pub fn unwatch(msg: &Message) {
 }
 
 pub fn status(msg: &Message) {
-    match meltomos::has_meltomo(&msg.author.id) {
-        Some(_) => talk_facade(&msg.channel_id, "I'm watching you."),
-        None => talk_facade(&msg.channel_id, "I'm not watching you."),
+    match meltomos::get_stat(&msg.author.id) {
+        Some(BondType::Normal) => talk_facade(&msg.channel_id, "We are meltomo(pen pals), right? At least I think so."),
+        Some(BondType::Watching) => talk_facade(&msg.channel_id, "I'm watching you."),
+        Some(BondType::Admin) => talk_facade(&msg.channel_id, "You are administrator of this bot."),
+        _ => talk_facade(&msg.channel_id, "I didn't know you, but now I know you."),
     }
 }
 
 // capture a watching player's status change and dm
-pub fn stat_update(game: Option<&Game>, player: &mut meltomos::meltomo::Meltomo) {
-    let user = &player.to_user().expect("failed to get user data");
-    match (game, player.game.as_ref()) {
+pub fn game_update(pres: Presence) {
+    if meltomos::conjecture_game(&pres.user_id, pres.game.as_ref()) { return; }
+    let user = &pres.user_id.to_user().expect("failed to get user data");
+    let (old, time) = meltomos::exchange_game(&pres.user_id, pres.game.clone());
+    match (pres.game, old) {
         (Some(new_game), Some(old_game)) => {
-            dm_facade(&user, &*format!("You started {} and thus quit {}, which had played for {} minutes.", new_game.name, old_game.name, minutes(&player.last_update)));
-            player.update_game(Some(new_game.clone()));
+            dm_facade(user, &*format!("You started {} and thus quit {}, which had played for {} minutes.", new_game.name, old_game.name, minutes(time)));
         },
         (Some(new_game), None) => {
-            dm_facade(&user, &*format!("You started {}.", new_game.name));
-            player.update_game(Some(new_game.clone()));
+            dm_facade(user, &*format!("You started {}.", new_game.name));
         },
         (None, Some(old_game)) => {
-            dm_facade(&user, &*format!("You have played {} for {} minutes.", old_game.name, minutes(&player.last_update)));
-            player.update_game(None);
+            dm_facade(user, &*format!("You have played {} for {} minutes.", old_game.name, minutes(time)));
         },
         (None, None) => ()
     }
 }
 
-// TODO remove when release 
 // list up meltomo info
-pub fn list() {
-    for (i, meltomo) in meltomos::get_lock().iter().enumerate() {
-        println!("meltomos No.{}| id:{:?}, status:{:?}, sequence:{:?}, game:{:?}, timestamp:{:?}", 
-                i, meltomo.id, meltomo.stat, meltomo.seq, meltomo.game, meltomo.last_update);
-    }
+pub fn list(msg: &Message) {
+    if meltomos::conjecture_stat(&msg.author.id, BondType::Admin) { return; }
+    meltomos::list();
+}
+
+// save meltomo list to file
+pub fn save(msg: &Message) {
+    if meltomos::conjecture_stat(&msg.author.id, BondType::Admin) { return; }
+    meltomos::save();
 }

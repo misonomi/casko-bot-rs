@@ -9,7 +9,6 @@ pub fn help(msg: &Message) {
 }
 
 pub fn command_battle(msg: &Message) {
-    meltomos::add_meltomo(&msg.author.id);
     react_facade(msg, "🔥");
     talk_facade(&msg.channel_id, "I accept your challenge. choose difficulty.");
     talk_facade(&msg.channel_id, "say e(easy) / n(normal) / h(hard)");

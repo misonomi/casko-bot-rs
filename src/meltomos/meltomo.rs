@@ -1,37 +1,33 @@
 use std::time::Instant;
 
-use serenity::model::{ id::UserId, gateway::Game, user::User };
+use serenity::model::{ id::UserId, gateway::Game };
 
-use super::stat;
+use super::stat::{ BondType, TalkSequence };
 
 pub struct Meltomo {
     pub id: UserId,
-    pub stat: stat::BondType,
-    pub seq: stat::TalkSequence,
+    pub stat: BondType,
+    pub seq: TalkSequence,
     pub game: Option<Game>,
     pub last_update: Instant
 }
 
 impl Meltomo {
-    pub fn new(id: UserId, stat: stat::BondType) -> Meltomo {
+    pub fn new(id: UserId, stat: BondType) -> Meltomo {
         Meltomo{ 
             id: id, 
             stat: stat, 
-            seq: stat::TalkSequence::None, 
+            seq: TalkSequence::None, 
             game: None, 
             last_update: Instant::now(),
         }
-    }
-
-    pub fn to_user(&self) -> serenity::Result<User> {
-        self.id.to_user()
     }
 
     pub fn has_id(&self, id: &UserId) -> bool {
         self.id.as_u64() == id.as_u64()
     }
 
-    pub fn change_stat(&mut self, stat: stat::BondType) -> Result<(), ()> {
+    pub fn change_stat(&mut self, stat: BondType) -> Result<(), ()> {
         if self.stat == stat {
             Err(())
         } else {
