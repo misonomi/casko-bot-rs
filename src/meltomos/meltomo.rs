@@ -53,5 +53,7 @@ impl Meltomo {
 impl PartialEq for Meltomo {
     fn eq(&self, target: &Meltomo) -> bool {
         self.id.as_u64() == target.id.as_u64()
+        && self.stat == target.stat
+        && self.seq == target.seq
     }
 }

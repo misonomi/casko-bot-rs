@@ -14,9 +14,7 @@ pub mod meltomo;
 use meltomo::Meltomo;
 
 lazy_static! {
-    static ref FILENAME: Arc<Mutex<String>> = {
-        Arc::new(Mutex::new(String::from("meltomos.dat")))
-    };
+    static ref FILENAME: Arc<Mutex<String>> = Arc::new(Mutex::new(String::from("meltomos.dat")));
 
     static ref CONTACTS: Arc<Mutex<Vec<Meltomo>>> = {
         let mut contacts = Vec::new();
@@ -151,33 +149,67 @@ pub fn save() {
 mod test {
     use super::*;
     #[test]
-    fn test_basics() {
+    fn test_root() {
         init();
+        test_list();
+        test_stat();
+
+        save();
+        // look out output file
+    }
+
+    fn test_list() {
+        test_add_meltomo(1, true);
+        test_add_meltomo(2, true);
+        test_add_meltomo(3, true);
         test_add_meltomo(1, false);
-        test_add_meltomo(4, true);
         test_add_meltomo(100, true);
+
         test_has_meltomo(1, Some(0));
         test_has_meltomo(3, Some(2));
         test_has_meltomo(0, None);
     }
 
-    #[test]
     fn test_stat() {
-        init();
-    }
+        test_watch(2, true);
+        test_watch(2, false);
+        test_watch(4, true);
+        test_conjecture_stat(1, BondType::Normal, true);
+        test_conjecture_stat(1, BondType::Watching, false);
+        test_conjecture_stat(2, BondType::Watching, true);
+        test_conjecture_stat(4, BondType::Watching, true);
+        test_conjecture_stat(0, BondType::Normal, false);
 
-    #[test]
-    fn test_io() {
-        // mendoi!!!!!
-        init();
-        save();
-        // look out output list
+        test_unwatch(4, true);
+        test_unwatch(1, false);
+        test_unwatch(0, false);
+        test_conjecture_stat(1, BondType::Normal, true);
+        test_conjecture_stat(4, BondType::Normal, true);
+        test_conjecture_stat(4, BondType::Watching, false);
+        test_conjecture_stat(0, BondType::Normal, false);
+
+        test_get_stat(1, Some(BondType::Normal));
+        test_get_stat(2, Some(BondType::Watching));
+        test_get_stat(4, Some(BondType::Normal));
+        test_get_stat(0, None);
     }
 
     #[test]
     #[ignore]
     fn test_default_filename() {
         assert_eq!(FILENAME.lock().unwrap().clone(), String::from("meltomos.dat"));
+    }
+
+    fn init() {
+        {
+            let mut filename = FILENAME.lock().unwrap();
+            filename.clear();
+            filename.push_str("meltomos.dat.test");
+        }
+        {
+            let mut contacts = CONTACTS.lock().unwrap();
+            contacts.clear();
+        }
     }
 
     // assert can add -> o = true
@@ -192,19 +224,26 @@ mod test {
         assert_eq!(has_meltomo(&uid(i)), o);
     }
 
-    fn init() {
-        {
-            let mut filename = FILENAME.lock().unwrap();
-            filename.clear();
-            filename.push_str("meltomos.dat.test");
+    fn test_watch(i: u64, o: bool) {
+        match o {
+            true => assert_eq!(watch(&uid(i)), Ok(())),
+            false => assert_eq!(watch(&uid(i)), Err(())),
         }
-        {
-            let mut contacts = CONTACTS.lock().unwrap();
-            contacts.clear();
+    }
+
+    fn test_unwatch(i: u64, o: bool) {
+        match o {
+            true => assert_eq!(unwatch(&uid(i)), Ok(())),
+            false => assert_eq!(unwatch(&uid(i)), Err(())),
         }
-        add_meltomo(&uid(1));
-        add_meltomo(&uid(2));
-        add_meltomo(&uid(3));
+    }
+
+    fn test_conjecture_stat(id: u64, stat: BondType, o: bool) {
+        assert_eq!(conjecture_stat(&uid(id), stat), o);
+    }
+
+    fn test_get_stat(i: u64, o: Option<BondType>) {
+        assert_eq!(get_stat(&uid(i)), o);
     }
 
     fn uid(num: u64) -> UserId {
