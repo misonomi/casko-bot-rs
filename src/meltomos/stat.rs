@@ -53,7 +53,7 @@ impl PartialEq for BondType {
 pub enum TalkSequence {
     None,
     ChooseDiffic,
-    InCombat(u16, u16, Difficulty),
+    InCombat(Difficulty, u16, u16),
 }
 
 impl TalkSequence {
