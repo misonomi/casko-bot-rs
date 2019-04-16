@@ -111,6 +111,10 @@ pub fn conjecture_seq(id: &UserId, seq: TalkSequence) -> bool {
     get_lock().iter().find(|m| m.has_id(id) && m.seq == seq).is_some()
 }
 
+pub fn get_seq(id: &UserId) -> Option<TalkSequence> {
+    get_lock().iter().find(|m| m.has_id(id)).map(|m| m.seq.clone())
+}
+
 pub fn update_seq(id: &UserId, seq: TalkSequence) {
     if let Some(target) = get_lock().iter_mut().find(|m| m.has_id(id)) {
         target.seq = seq;

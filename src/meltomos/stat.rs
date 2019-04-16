@@ -1,6 +1,6 @@
 use std::u8::MAX;
 
-use crate::handler::combat::Difficulty;
+use crate::handler::combat::CombatStatus;
 
 #[derive(Debug, Clone)]
 pub enum BondType {
@@ -53,7 +53,7 @@ impl PartialEq for BondType {
 pub enum TalkSequence {
     None,
     ChooseDiffic,
-    InCombat(Difficulty, u16, u16),
+    InCombat(CombatStatus),
 }
 
 impl TalkSequence {
@@ -61,7 +61,7 @@ impl TalkSequence {
         match self {
             TalkSequence::None => &0,
             TalkSequence::ChooseDiffic => &1,
-            TalkSequence::InCombat(_, _, _) => &2,
+            TalkSequence::InCombat(_) => &2,
         }
     }
 }

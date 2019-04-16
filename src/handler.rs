@@ -91,12 +91,10 @@ fn command_handle_with_prefix(msg: &Message) -> bool {
 
 fn interactive_handle_core(msg: &Message, text: &str) -> bool {
     match text {
-        "e" => combat::choose(msg, Difficulty::Easy),
-        "easy" => combat::choose(msg, Difficulty::Easy),
-        "n" => combat::choose(msg, Difficulty::Normal),
-        "normal" => combat::choose(msg, Difficulty::Normal),
-        "h" => combat::choose(msg, Difficulty::Hard),
-        "hard" => combat::choose(msg, Difficulty::Hard),
+        "e" | "easy" => combat::choose(msg, Difficulty::Easy),
+        "n" | "normal" => combat::choose(msg, Difficulty::Normal),
+        "h" | "hard" => combat::choose(msg, Difficulty::Hard),
+        "" => combat::battle(msg),
 
         _ => false
     }
