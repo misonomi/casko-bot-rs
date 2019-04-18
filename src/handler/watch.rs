@@ -5,33 +5,36 @@ use crate::meltomos::stat::BondType;
 use super::util::{ talk_facade, dm_facade, minutes };
 
 // change status of msg's author to watching and say so
-pub fn watch(msg: &Message) {
+pub fn watch(msg: &Message) -> bool {
     match meltomos::watch(&msg.author.id) {
         Ok(_) => talk_facade(&msg.channel_id, "Now I'm watching you!"),
         Err(_) => talk_facade(&msg.channel_id, "I'm already watching you."),
     }
+    true
 }
 
 // change status of msg's author to unwatching and say so
-pub fn unwatch(msg: &Message) {
+pub fn unwatch(msg: &Message) -> bool {
     match meltomos::unwatch(&msg.author.id) {
         Ok(_) => talk_facade(&msg.channel_id, "I'm no longer watching you."),
         Err(_) => talk_facade(&msg.channel_id, "I'm not watching you."),
     }
+    true
 }
 
-pub fn status(msg: &Message) {
+pub fn status(msg: &Message) -> bool {
     match meltomos::get_stat(&msg.author.id) {
         Some(BondType::Normal) => talk_facade(&msg.channel_id, "We are meltomo(pen pals), right? At least I think so."),
         Some(BondType::Watching) => talk_facade(&msg.channel_id, "I'm watching you."),
         Some(BondType::Admin) => talk_facade(&msg.channel_id, "You are administrator of this bot."),
         _ => talk_facade(&msg.channel_id, "I didn't know you, but now I know you."),
     }
+    true
 }
 
 // capture a watching player's status change and dm
-pub fn game_update(pres: Presence) {
-    if meltomos::conjecture_game(&pres.user_id, pres.game.as_ref()) { return; }
+pub fn game_update(pres: Presence) -> bool {
+    if meltomos::conjecture_game(&pres.user_id, pres.game.as_ref()) { return false; }
     let user = &pres.user_id.to_user().expect("failed to get user data");
     let (old, time) = meltomos::exchange_game(&pres.user_id, pres.game.clone());
     match (pres.game, old) {
@@ -46,16 +49,19 @@ pub fn game_update(pres: Presence) {
         },
         (None, None) => ()
     }
+    true
 }
 
 // list up meltomo info
-pub fn list(msg: &Message) {
-    if meltomos::conjecture_stat(&msg.author.id, BondType::Admin) { return; }
+pub fn list(msg: &Message) -> bool {
+    if meltomos::conjecture_stat(&msg.author.id, BondType::Admin) { return false; }
     meltomos::list();
+    true
 }
 
 // save meltomo list to file
-pub fn save(msg: &Message) {
-    if meltomos::conjecture_stat(&msg.author.id, BondType::Admin) { return; }
+pub fn save(msg: &Message) -> bool {
+    if meltomos::conjecture_stat(&msg.author.id, BondType::Admin) { return false; }
     meltomos::save();
+    true
 }

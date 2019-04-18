@@ -107,6 +107,10 @@ pub fn get_stat(id: &UserId) -> Option<BondType> {
     get_lock().iter().find(|m| m.has_id(id)).map(|m| m.stat.clone())
 }
 
+pub fn is_talking(id: &UserId) -> bool {
+    get_lock().iter().find(|m| m.has_id(id) && m.seq != TalkSequence::None).is_some()
+}
+
 pub fn conjecture_seq(id: &UserId, seq: TalkSequence) -> bool {
     get_lock().iter().find(|m| m.has_id(id) && m.seq == seq).is_some()
 }

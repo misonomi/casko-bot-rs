@@ -54,6 +54,7 @@ pub enum TalkSequence {
     None,
     ChooseDiffic,
     InCombat(CombatStatus),
+    FreeTalk,
 }
 
 impl PartialEq for TalkSequence {
@@ -62,6 +63,7 @@ impl PartialEq for TalkSequence {
             (TalkSequence::None, TalkSequence::None) => true,
             (TalkSequence::ChooseDiffic, TalkSequence::ChooseDiffic) => true,
             (TalkSequence::InCombat(_), TalkSequence::InCombat(_)) => true,
+            (TalkSequence::FreeTalk, TalkSequence::FreeTalk) => true,
             _ => false,
         }
     }

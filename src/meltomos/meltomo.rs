@@ -36,11 +36,6 @@ impl Meltomo {
         }
     }
 
-    pub fn update_game(&mut self, game: Option<Game>) {
-        self.game = game;
-        self.last_update = Instant::now()
-    }
-
     pub fn game_changed(&self, new_game: Option<&Game>) -> bool {
         match (self.game.as_ref(), new_game) {
             (Some(old), Some(new)) => old.name != new.name,

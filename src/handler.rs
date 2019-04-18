@@ -1,5 +1,4 @@
 // look out this file to know what this bot do
-use regex::Regex;
 
 use serenity::{
     model::{
@@ -29,16 +28,14 @@ impl EventHandler for Handler {
         // to direct message
         if msg.is_private() {
             meltomos::add_meltomo(&msg.author.id);
-            if command_handle(&msg, &*msg.content) { return; }
-            if interactive_handle_allow_prefix(&msg) { return; }
+            handle_private(&msg)
         // to public message
         } else {
-            if interactive_handle_allow_prefix(&msg) { return; }
+            handle_public(&msg)
         }
-        command_handle_with_prefix(&msg);
     }
 
-    // test
+    // test remove if not working
     fn presence_replace(&self, _: Context, presences: Vec<Presence>) {
         println!("presence replace caught:");
         for (i, presence) in presences.iter().enumerate() {
@@ -68,26 +65,15 @@ fn command_handle(msg: &Message, text: &str) -> bool {
 
         "janken" => talk::command_battle(msg),
 
+        "freetalk" => talk::free_talk(msg),
+
         "e" => art::random(msg),
 
         "whoami" => talk::whois(msg),
         "list" => watch::list(msg),
         "save" => watch::save(msg),
 
-        _ => return false
-    }
-    true
-}
-
-fn command_handle_with_prefix(msg: &Message) -> bool {
-    if let Some(text) = util::remove_prefix(&*msg.content) {
-        meltomos::add_meltomo(&msg.author.id);
-        if !command_handle(&msg, text) {
-            talk::dunno(msg);
-        }
-        true
-    } else {
-        false
+        _ => false
     }
 }
 
@@ -102,10 +88,23 @@ fn interactive_handle(msg: &Message, text: &str) -> bool {
     }
 }
 
-fn interactive_handle_allow_prefix(msg: &Message) -> bool {
-    if let Some(text) = util::remove_prefix(&*msg.content) {
-        return interactive_handle(msg, text);
+fn handle_private(msg: &Message) {
+    let handled = if let Some(text) = util::remove_prefix(&*msg.content) {
+        command_handle(msg, text) || interactive_handle(msg, text)
     } else {
-        return interactive_handle(msg, &*msg.content);
-    }
+        command_handle(msg, &*msg.content) || interactive_handle(msg, &*msg.content)
+    };
+    if !handled { talk::dunno(msg); }
+}
+
+fn handle_public(msg: &Message) {
+    let handled = if let Some(text) = util::remove_prefix(&*msg.content) {
+        command_handle(msg, text) || interactive_handle(msg, text)
+    } else if meltomos::is_talking(&msg.author.id){
+        interactive_handle(msg, &*msg.content);
+        true
+    } else {
+        true
+    };
+    if !handled { talk::dunno(msg); }
 }
