@@ -1,4 +1,5 @@
 // look out this file to know what this bot do
+use regex::Regex;
 
 use serenity::{
     model::{
@@ -29,10 +30,10 @@ impl EventHandler for Handler {
         if msg.is_private() {
             meltomos::add_meltomo(&msg.author.id);
             if command_handle(&msg, &*msg.content) { return; }
-            if interactive_handle(&msg) { return; }
+            if interactive_handle_allow_prefix(&msg) { return; }
         // to public message
         } else {
-            if interactive_handle(&msg) { return; }
+            if interactive_handle_allow_prefix(&msg) { return; }
         }
         command_handle_with_prefix(&msg);
     }
@@ -59,6 +60,7 @@ impl EventHandler for Handler {
 fn command_handle(msg: &Message, text: &str) -> bool {
     match text {
         "help" => talk::help(msg),
+        "combat_help" => talk::combat_help(msg),
 
         "watchme" => watch::watch(msg),
         "unwatchme" => watch::unwatch(msg),
@@ -89,21 +91,21 @@ fn command_handle_with_prefix(msg: &Message) -> bool {
     }
 }
 
-fn interactive_handle_core(msg: &Message, text: &str) -> bool {
+fn interactive_handle(msg: &Message, text: &str) -> bool {
     match text {
         "e" | "easy" => combat::choose(msg, Difficulty::Easy),
         "n" | "normal" => combat::choose(msg, Difficulty::Normal),
         "h" | "hard" => combat::choose(msg, Difficulty::Hard),
-        "" => combat::battle(msg),
+        battle if util::HAND_PATTERN.is_match(battle) => combat::battle(msg),
 
         _ => false
     }
 }
 
-fn interactive_handle(msg: &Message) -> bool {
+fn interactive_handle_allow_prefix(msg: &Message) -> bool {
     if let Some(text) = util::remove_prefix(&*msg.content) {
-        return interactive_handle_core(msg, text);
+        return interactive_handle(msg, text);
     } else {
-        return interactive_handle_core(msg, &*msg.content);
+        return interactive_handle(msg, &*msg.content);
     }
 }

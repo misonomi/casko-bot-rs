@@ -56,18 +56,13 @@ pub enum TalkSequence {
     InCombat(CombatStatus),
 }
 
-impl TalkSequence {
-    fn into_borrow(&self) -> &u8 {
-        match self {
-            TalkSequence::None => &0,
-            TalkSequence::ChooseDiffic => &1,
-            TalkSequence::InCombat(_) => &2,
-        }
-    }
-}
-
 impl PartialEq for TalkSequence {
     fn eq(&self, target: &TalkSequence) -> bool {
-        self.into_borrow() == target.into_borrow()
+        match (self, target) {
+            (TalkSequence::None, TalkSequence::None) => true,
+            (TalkSequence::ChooseDiffic, TalkSequence::ChooseDiffic) => true,
+            (TalkSequence::InCombat(_), TalkSequence::InCombat(_)) => true,
+            _ => false,
+        }
     }
 }

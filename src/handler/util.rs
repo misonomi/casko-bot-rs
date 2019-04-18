@@ -4,15 +4,24 @@ use regex::Regex;
 
 use serenity::model::{ id::ChannelId, user::User, channel::{ Message, ReactionType } };
 
+lazy_static! {
+    static ref PREFIX: Regex = Regex::new(r"^\s*\^\^~\s*(.*)").expect("wrong pattern!!!!!!!!!");
+    pub static ref HAND_PATTERN: Regex = Regex::new(r"^>>.*").expect("wrong pattern!!!!!!!!!");
+}
+
 pub fn dm_facade(user: &User, mes: &str) {
     if let Err(cause) = user.dm(|m| m.content(mes)) {
         println!("Error when direct messaging user: {:?}", cause);
+    } else {
+        println!("dmed: {}", mes);
     }
 }
 
 pub fn talk_facade(channel: &ChannelId, mes: &str) {
     if let Err(cause) = channel.say(mes) {
         println!("Error when talking: {:?}", cause);
+    } else {
+        println!("talked: {}", mes);
     }
 }
 
@@ -27,10 +36,7 @@ pub fn minutes(from: Instant) -> u64 {
 }
 
 pub fn remove_prefix(mes: &str) -> Option<&str> {
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"^\s*\^\^~\s*(.*)").expect("wrong prefix!!!!!!!!!");
-    }
-    if let Some(text) = RE.captures(mes) {
+    if let Some(text) = PREFIX.captures(mes) {
         return text.get(1).map(|m| m.as_str());
     }
     None
@@ -46,16 +52,16 @@ mod test {
 
     #[test]
     fn test_has_prefix() {
-        thp_core("not accepted", None);
-        thp_core("", None);
-        thp_core("^^~", Some(""));
-        thp_core("^^~ok", Some("ok"));
-        thp_core("^^~  ok", Some("ok"));
-        thp_core("  ^^~  ok", Some("ok"));
-        thp_core("^^~^^~", Some("^^~"));
+        test_has_prefix_core("not accepted", None);
+        test_has_prefix_core("", None);
+        test_has_prefix_core("^^~", Some(""));
+        test_has_prefix_core("^^~ok", Some("ok"));
+        test_has_prefix_core("^^~  ok", Some("ok"));
+        test_has_prefix_core("  ^^~  ok", Some("ok"));
+        test_has_prefix_core("^^~^^~", Some("^^~"));
     }
 
-    fn thp_core(str_in: &str, str_out: Option<&str>) {
+    fn test_has_prefix_core(str_in: &str, str_out: Option<&str>) {
         assert_eq!(remove_prefix(str_in), str_out);
     }
 }
