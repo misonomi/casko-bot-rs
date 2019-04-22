@@ -65,7 +65,9 @@ fn command_handle(msg: &Message, text: &str) -> bool {
 
         "janken" => talk::command_battle(msg),
 
-        "freetalk" => talk::free_talk(msg),
+        "freetalk" => talk::start_free_talk(msg),
+        
+        "quit" => talk::quit(msg),
 
         "e" => art::random(msg),
 
@@ -84,7 +86,7 @@ fn interactive_handle(msg: &Message, text: &str) -> bool {
         "h" | "hard" => combat::choose(msg, Difficulty::Hard),
         battle if util::HAND_PATTERN.is_match(battle) => combat::battle(msg),
 
-        _ => false
+        _ => talk::free_talk(msg),
     }
 }
 
@@ -100,7 +102,7 @@ fn handle_private(msg: &Message) {
 fn handle_public(msg: &Message) {
     let handled = if let Some(text) = util::remove_prefix(&*msg.content) {
         command_handle(msg, text) || interactive_handle(msg, text)
-    } else if meltomos::is_talking(&msg.author.id){
+    } else if meltomos::is_talking(&msg.author.id) {
         interactive_handle(msg, &*msg.content);
         true
     } else {

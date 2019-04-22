@@ -6,7 +6,7 @@ use crate::meltomos::stat::TalkSequence;
 
 pub fn help(msg: &Message) -> bool{
     react_facade(msg, "✅");
-    dm_facade(&msg.author, "*help*");
+    dm_facade(&msg.author, "*help*\n*help*");
     true
 }
 
@@ -25,8 +25,17 @@ pub fn command_battle(msg: &Message) -> bool {
     true
 }
 
-pub fn free_talk(msg: &Message) -> bool {
+pub fn start_free_talk(msg: &Message) -> bool {
     meltomos::update_seq(&msg.author.id, TalkSequence::FreeTalk);
+    react_facade(msg, "😄");
+    talk_facade(&msg.channel_id, "starting free talk.");
+    true
+}
+
+pub fn quit(msg: &Message) -> bool {
+    meltomos::update_seq(&msg.author.id, TalkSequence::None);
+    react_facade(msg, "✅");
+    talk_facade(&msg.channel_id, "exitting all conversation.");
     true
 }
 
@@ -40,4 +49,12 @@ pub fn whois(msg: &Message) -> bool {
 pub fn dunno(msg: &Message) {
     react_facade(msg, "🤔");
     talk_facade(&msg.channel_id, "unknown command. say '^^~ help' to get help dm");
+}
+
+
+
+pub fn free_talk(msg: &Message) -> bool {
+    if !meltomos::conjecture_seq(&msg.author.id, TalkSequence::FreeTalk) { return false; }
+    // nlp!!!!!!!
+    true
 }
