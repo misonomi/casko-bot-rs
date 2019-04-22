@@ -229,11 +229,12 @@ impl CombatStatus {
         TurnResult::Win
     }
     fn lose(&mut self, damage_base: u16) -> TurnResult {
-        self.player_health -= damage_base;
+        self.casko_health -= damage_base;
         TurnResult::Lose
     }
     fn draw(&mut self, damage_base: u16) -> TurnResult {
         self.player_health -= damage_base;
+        self.casko_health -= damage_base;
         TurnResult::Draw
     }
     fn kokutendo_p(&mut self, damage_base: u16) -> TurnResult {
@@ -241,7 +242,7 @@ impl CombatStatus {
         TurnResult::Guard
     }
     fn kokutendo_c(&mut self, damage_base: u16) -> TurnResult {
-        self.player_health -= damage_base / 10;
+        self.casko_health -= damage_base / 10;
         
         TurnResult::Guard
     }
