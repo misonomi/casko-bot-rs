@@ -52,3 +52,70 @@ impl PartialEq for Meltomo {
         && self.seq == target.seq
     }
 }
+
+#[cfg(test)]
+mod test {
+    use super::*;
+
+    #[test]
+    fn test_has_id() {
+        let meltomo = Meltomo::new(UserId::from(123), BondType::Normal);
+        assert!(meltomo.has_id(&UserId::from(123)));
+        assert!(!meltomo.has_id(&UserId::from(12)));
+        assert!(!meltomo.has_id(&UserId::from(124)));
+    }
+
+    #[test]
+    fn test_change_stat() {
+        let mut meltomo = Meltomo::new(UserId::from(123), BondType::Normal);
+        assert_eq!(meltomo.change_stat(BondType::Watching), Ok(()));
+        assert_eq!(meltomo.change_stat(BondType::Watching), Err(()));
+        assert_eq!(meltomo.change_stat(BondType::Admin), Ok(()));
+    }
+
+    #[test]
+    fn test_game_changed() {
+        let mut meltomo = Meltomo::new(UserId::from(123), BondType::Normal);
+        assert!(!meltomo.game_changed(None));
+        assert!(meltomo.game_changed(Some(&Game::from("Fate/EXTRA"))));
+        // should idempotent
+        assert!(!meltomo.game_changed(None));
+        assert!(meltomo.game_changed(Some(&Game::from("Fate/EXTRA"))));
+
+        meltomo.game = Some(Game::from("Fate/EXTRA"));
+        assert!(meltomo.game_changed(None));
+        assert!(!meltomo.game_changed(Some(&Game::from("Fate/EXTRA"))));
+        assert!(meltomo.game_changed(Some(&Game::from("Fate/EXTRA CCC"))));
+        assert!(meltomo.game_changed(Some(&Game::from("Armored Core 4"))));
+    }
+
+    #[test]
+    fn test_eq() {
+        let (meltomo_a, mut meltomo_b) = generate_double_meltomo();
+        assert!(meltomo_a == meltomo_b);
+        meltomo_b.id = UserId::from(999);
+        assert!(meltomo_a != meltomo_b);
+        meltomo_b.stat = BondType::Admin;
+        assert!(meltomo_a != meltomo_b);
+        meltomo_b.seq = TalkSequence::ChooseDiffic;
+        assert!(meltomo_a != meltomo_b);
+
+        let (mut meltomo_a, mut meltomo_b) = generate_double_meltomo();
+        meltomo_a.stat = BondType::Watching;
+        assert!(meltomo_a != meltomo_b);
+        meltomo_b.seq = TalkSequence::FreeTalk;
+        assert!(meltomo_a != meltomo_b);
+
+        let (mut meltomo_a, meltomo_b) = generate_double_meltomo();
+        meltomo_a.seq = TalkSequence::FreeTalk;
+        assert!(meltomo_a != meltomo_b);
+
+        let (meltomo_a, mut meltomo_b) = generate_double_meltomo();
+        meltomo_b.game = Some(Game::from("Fate/EXTRA"));
+        assert!(meltomo_a == meltomo_b);
+    }
+
+    fn generate_double_meltomo() -> (Meltomo, Meltomo) {
+        (Meltomo::new(UserId::from(123), BondType::Normal), Meltomo::new(UserId::from(123), BondType::Normal))
+    }
+}

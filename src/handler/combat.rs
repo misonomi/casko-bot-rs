@@ -397,10 +397,6 @@ mod test {
         test_interpret_core(">AAA>", [Card::Attack, Card::Attack, Card::Attack, Card::Error, Card::Error, Card::Error]);
     }
 
-    #[test]
-    fn testa() {
-    }
-
     fn test_interpret_core(text: &str, hands: [Card; HANDLEN]) {
         let result = Hand::interpret(&String::from(text));
         for i in 0..HANDLEN - 1 {
