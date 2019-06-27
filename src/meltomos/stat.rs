@@ -54,6 +54,7 @@ pub enum TalkSequence {
     None,
     ChooseDiffic,
     InCombat(CombatStatus),
+    Vote,
     FreeTalk,
 }
 

@@ -13,9 +13,11 @@ use crate::meltomos;
 
 mod talk;
 mod watch;
-mod util;
 mod art;
+mod freetalk;
+mod vote;
 pub mod combat;
+mod util;
 use combat::Difficulty;
 
 pub struct Handler;
@@ -58,14 +60,17 @@ fn command_handle(msg: &Message, text: &str) -> bool {
     match text {
         "help" => talk::help(msg),
         "combat_help" => talk::combat_help(msg),
+        "vote_help" => talk::vote_help(msg),
 
         "watchme" => watch::watch(msg),
         "unwatchme" => watch::unwatch(msg),
         "status" => watch::status(msg),
 
-        "janken" => talk::command_battle(msg),
+        "janken" => combat::start(msg),
 
-        "freetalk" => talk::start_free_talk(msg),
+        "vote" => vote::start(msg),
+
+        "freetalk" => freetalk::start(msg),
         
         "quit" => talk::quit(msg),
 
@@ -86,7 +91,7 @@ fn interactive_handle(msg: &Message, text: &str) -> bool {
         "h" | "hard" => combat::choose(msg, Difficulty::Hard),
         battle if util::HAND_PATTERN.is_match(battle) => combat::battle(msg),
 
-        _ => talk::free_talk(msg),
+        _ => freetalk::talk(msg),
     }
 }
 
