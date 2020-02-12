@@ -6,13 +6,14 @@ use std::sync::{ Arc, Mutex, MutexGuard };
 use std::path::Path;
 use lazy_static::lazy_static;
 
-use serenity::model::{ id::UserId, gateway::Game };
+use serenity::model::{ id::UserId, gateway::Activity };
 
 pub mod stat;
 use stat::{ BondType, TalkSequence };
 pub mod meltomo;
 use meltomo::Meltomo;
 
+#[macro_use(lazy_static)]
 lazy_static! {
     static ref FILENAME: Arc<Mutex<String>> = Arc::new(Mutex::new(String::from("meltomos.dat")));
 
@@ -125,11 +126,11 @@ pub fn update_seq(id: &UserId, seq: TalkSequence) {
     }
 }
 
-pub fn conjecture_game(id: &UserId, game: Option<&Game>) -> bool {
+pub fn conjecture_game(id: &UserId, game: Option<&Activity>) -> bool {
     get_lock().iter().find(|m| m.has_id(id) && m.game_changed(game)).is_some()
 }
 
-pub fn exchange_game(id: &UserId, game: Option<Game>) -> (Option<Game>, Instant) {
+pub fn exchange_game(id: &UserId, game: Option<Activity>) -> (Option<Activity>, Instant) {
     let mut contacts_locked = get_lock();
     if let Some(target) = contacts_locked.iter_mut().find(|m| m.has_id(id)) {
         (mem::replace(&mut target.game, game), mem::replace(&mut target.last_update, Instant::now()))

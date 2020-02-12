@@ -4,8 +4,22 @@ name = "casko-bot-rs"
 version = "0.0.1"
 authors = [ "misonomi <misonomi0612@gmail.com>" ]
 
+[dependencies.serenity]
+default-features = false
+features = [
+    "builder",
+    "client",
+    "framework",
+    "gateway",
+    "http",
+    "model",
+    "standard_framework",
+    "utils",
+    "rustls_backend",
+]
+version = "0.8"
+
 [dependencies]
-serenity = { git = "https://github.com/serenity-rs/serenity" }
-lazy_static = "*"
+lazy_static = "1.4.0"
 regex = "*"
 rand = "*"

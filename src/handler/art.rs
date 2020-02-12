@@ -8,6 +8,8 @@ use serenity::model::channel::Message;
 
 use super::util::{ talk_facade, react_facade };
 
+
+#[macro_use(lazy_static)]
 lazy_static! {
     static ref ARTIDLIST: Vec<String> = {
         let mut artlist = Vec::new();

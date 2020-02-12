@@ -1,6 +1,6 @@
 use std::time::Instant;
 
-use serenity::model::{ id::UserId, gateway::Game };
+use serenity::model::{ id::UserId, gateway::Activity };
 
 use super::stat::{ BondType, TalkSequence };
 
@@ -8,7 +8,7 @@ pub struct Meltomo {
     pub id: UserId,
     pub stat: BondType,
     pub seq: TalkSequence,
-    pub game: Option<Game>,
+    pub game: Option<Activity>,
     pub last_update: Instant
 }
 
@@ -36,7 +36,7 @@ impl Meltomo {
         }
     }
 
-    pub fn game_changed(&self, new_game: Option<&Game>) -> bool {
+    pub fn game_changed(&self, new_game: Option<&Activity>) -> bool {
         match (self.game.as_ref(), new_game) {
             (Some(old), Some(new)) => old.name != new.name,
             (None, None) => false,
@@ -77,16 +77,16 @@ mod test {
     fn test_game_changed() {
         let mut meltomo = Meltomo::new(UserId::from(123), BondType::Normal);
         assert!(!meltomo.game_changed(None));
-        assert!(meltomo.game_changed(Some(&Game::from("Fate/EXTRA"))));
+        assert!(meltomo.game_changed(Some(&Activity::playing("Fate/EXTRA"))));
         // should idempotent
         assert!(!meltomo.game_changed(None));
-        assert!(meltomo.game_changed(Some(&Game::from("Fate/EXTRA"))));
+        assert!(meltomo.game_changed(Some(&Activity::playing("Fate/EXTRA"))));
 
-        meltomo.game = Some(Game::from("Fate/EXTRA"));
+        meltomo.game = Some(Activity::playing("Fate/EXTRA"));
         assert!(meltomo.game_changed(None));
-        assert!(!meltomo.game_changed(Some(&Game::from("Fate/EXTRA"))));
-        assert!(meltomo.game_changed(Some(&Game::from("Fate/EXTRA CCC"))));
-        assert!(meltomo.game_changed(Some(&Game::from("Armored Core 4"))));
+        assert!(!meltomo.game_changed(Some(&Activity::playing("Fate/EXTRA"))));
+        assert!(meltomo.game_changed(Some(&Activity::playing("Fate/EXTRA CCC"))));
+        assert!(meltomo.game_changed(Some(&Activity::playing("Armored Core 4"))));
     }
 
     #[test]
@@ -111,7 +111,7 @@ mod test {
         assert!(meltomo_a != meltomo_b);
 
         let (meltomo_a, mut meltomo_b) = generate_double_meltomo();
-        meltomo_b.game = Some(Game::from("Fate/EXTRA"));
+        meltomo_b.game = Some(Activity::playing("Fate/EXTRA"));
         assert!(meltomo_a == meltomo_b);
     }
 

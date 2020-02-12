@@ -4,7 +4,7 @@ use serenity::{
     model::{
         channel::Message, 
         event::PresenceUpdateEvent, 
-        gateway::{ Ready, Game, Presence }, 
+        gateway::{ Ready, Activity, Presence }, 
         user::OnlineStatus },
     prelude::{Context, EventHandler},
 };
@@ -52,7 +52,7 @@ impl EventHandler for Handler {
     }
 
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
-        ctx.shard.set_presence(Some(Game::playing("Fate/EXTRA")), OnlineStatus::Online);
+        ctx.shard.set_presence(Some(Activity::playing("Fate/EXTRA")), OnlineStatus::Online);
     }
 }
 

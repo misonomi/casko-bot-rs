@@ -34,10 +34,10 @@ pub fn status(msg: &Message) -> bool {
 
 // capture a watching player's status change and dm
 pub fn game_update(pres: Presence) -> bool {
-    if meltomos::conjecture_game(&pres.user_id, pres.game.as_ref()) { return false; }
+    if meltomos::conjecture_game(&pres.user_id, pres.activity.as_ref()) { return false; }
     let user = &pres.user_id.to_user().expect("failed to get user data");
-    let (old, time) = meltomos::exchange_game(&pres.user_id, pres.game.clone());
-    match (pres.game, old) {
+    let (old, time) = meltomos::exchange_game(&pres.user_id, pres.activity.clone());
+    match (pres.activity, old) {
         (Some(new_game), Some(old_game)) => {
             dm_facade(user, &*format!("You started {} and thus quit {}, which had played for {} minutes.", new_game.name, old_game.name, minutes(time)));
         },
