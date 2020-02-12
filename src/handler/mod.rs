@@ -6,7 +6,7 @@ use serenity::{
         event::PresenceUpdateEvent, 
         gateway::{ Ready, Activity, Presence }, 
         user::OnlineStatus },
-    prelude::{Context, EventHandler},
+    prelude::{ Context, EventHandler },
 };
 
 use crate::meltomos;
@@ -25,15 +25,15 @@ pub struct Handler;
 impl EventHandler for Handler {
     
     // reaction for messages
-    fn message(&self, _: Context, msg: Message) {
+    fn message(&self, c: Context, msg: Message) {
         if msg.author.bot { return; }
         // to direct message
         if msg.is_private() {
             meltomos::add_meltomo(&msg.author.id);
-            handle_private(&msg)
+            handle_private(c, &msg)
         // to public message
         } else {
-            handle_public(&msg)
+            handle_public(c, &msg)
         }
     }
 
@@ -47,8 +47,8 @@ impl EventHandler for Handler {
 
     // reaction for status update
     // TODO add more (havnt decided what)
-    fn presence_update(&self, _: Context, event: PresenceUpdateEvent) {
-        watch::game_update(event.presence);
+    fn presence_update(&self, c: Context, event: PresenceUpdateEvent) {
+        watch::game_update(&c, event.presence);
     }
 
     fn ready(&self, ctx: Context, _data_about_bot: Ready) {
@@ -56,27 +56,27 @@ impl EventHandler for Handler {
     }
 }
 
-fn command_handle(msg: &Message, text: &str) -> bool {
+fn command_handle(c: &Context, msg: &Message, text: &str) -> bool {
     match text {
-        "help" => talk::help(msg),
-        "combat_help" => talk::combat_help(msg),
-        "vote_help" => talk::vote_help(msg),
+        "help" => talk::help(c, msg),
+        "combat_help" => talk::combat_help(c, msg),
+        "vote_help" => talk::vote_help(c, msg),
 
-        "watchme" => watch::watch(msg),
-        "unwatchme" => watch::unwatch(msg),
-        "status" => watch::status(msg),
+        "watchme" => watch::watch(c, msg),
+        "unwatchme" => watch::unwatch(c, msg),
+        "status" => watch::status(c, msg),
 
-        "janken" => combat::start(msg),
+        "janken" => combat::start(c, msg),
 
-        "vote" => vote::start(msg),
+        "vote" => vote::start(c, msg),
 
-        "freetalk" => freetalk::start(msg),
+        "freetalk" => freetalk::start(c, msg),
         
-        "quit" => talk::quit(msg),
+        "quit" => talk::quit(c, msg),
 
-        "e" => art::random(msg),
+        "e" => art::random(c, msg),
 
-        "whoami" => talk::whois(msg),
+        "whoami" => talk::whois(c, msg),
         "list" => watch::list(msg),
         "save" => watch::save(msg),
 
@@ -84,34 +84,34 @@ fn command_handle(msg: &Message, text: &str) -> bool {
     }
 }
 
-fn interactive_handle(msg: &Message, text: &str) -> bool {
+fn interactive_handle(c: &Context, msg: &Message, text: &str) -> bool {
     match text {
-        "e" | "easy" => combat::choose(msg, Difficulty::Easy),
-        "n" | "normal" => combat::choose(msg, Difficulty::Normal),
-        "h" | "hard" => combat::choose(msg, Difficulty::Hard),
-        battle if util::HAND_PATTERN.is_match(battle) => combat::battle(msg),
+        "e" | "easy" => combat::choose(c, msg, Difficulty::Easy),
+        "n" | "normal" => combat::choose(c, msg, Difficulty::Normal),
+        "h" | "hard" => combat::choose(c, msg, Difficulty::Hard),
+        battle if util::HAND_PATTERN.is_match(battle) => combat::battle(c, msg),
 
-        _ => freetalk::talk(msg),
+        _ => freetalk::talk(c, msg),
     }
 }
 
-fn handle_private(msg: &Message) {
+fn handle_private(c: Context, msg: &Message) {
     let handled = if let Some(text) = util::remove_prefix(&*msg.content) {
-        command_handle(msg, text) || interactive_handle(msg, text)
+        command_handle(&c, msg, text) || interactive_handle(&c, msg, text)
     } else {
-        command_handle(msg, &*msg.content) || interactive_handle(msg, &*msg.content)
+        command_handle(&c, msg, &*msg.content) || interactive_handle(&c, msg, &*msg.content)
     };
-    if !handled { talk::dunno(msg); }
+    if !handled { talk::dunno(&c, msg); }
 }
 
-fn handle_public(msg: &Message) {
+fn handle_public(c: Context, msg: &Message) {
     let handled = if let Some(text) = util::remove_prefix(&*msg.content) {
-        command_handle(msg, text) || interactive_handle(msg, text)
+        command_handle(&c, msg, text) || interactive_handle(&c, msg, text)
     } else if meltomos::is_talking(&msg.author.id) {
-        interactive_handle(msg, &*msg.content);
+        interactive_handle(&c, msg, &*msg.content);
         true
     } else {
         true
     };
-    if !handled { talk::dunno(msg); }
+    if !handled { talk::dunno(&c, msg); }
 }

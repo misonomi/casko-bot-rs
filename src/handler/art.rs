@@ -4,7 +4,10 @@ use std::path::Path;
 use lazy_static::lazy_static;
 use rand::seq::SliceRandom;
 
-use serenity::model::channel::Message;
+use serenity::{
+    model::channel::Message,
+    prelude::Context,
+};
 
 use super::util::{ talk_facade, react_facade };
 
@@ -29,8 +32,8 @@ lazy_static! {
     };
 }
 
-pub fn random(msg: &Message) -> bool {
-    react_facade(msg, "🎨");
-    talk_facade(&msg.channel_id, &*format!("http://{}", ARTIDLIST.choose(&mut rand::thread_rng()).unwrap_or(&String::from("0"))));
+pub fn random(c: &Context, msg: &Message) -> bool {
+    react_facade(c, msg, "🎨");
+    talk_facade(c, &msg.channel_id, &*format!("http://{}", ARTIDLIST.choose(&mut rand::thread_rng()).unwrap_or(&String::from("0"))));
     true
 }

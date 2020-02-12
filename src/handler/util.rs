@@ -2,31 +2,34 @@ use std::time::Instant;
 use lazy_static::lazy_static;
 use regex::Regex;
 
-use serenity::model::{ id::ChannelId, user::User, channel::{ Message, ReactionType } };
+use serenity::{
+    model::{ id::ChannelId, user::User, channel::{ Message, ReactionType } },
+    prelude::Context,
+};
 
 lazy_static! {
     static ref PREFIX: Regex = Regex::new(r"^\s*\^\^~\s*(.*)").expect("wrong pattern!!!!!!!!!");
     pub static ref HAND_PATTERN: Regex = Regex::new(r"^>>.*").expect("wrong pattern!!!!!!!!!");
 }
 
-pub fn dm_facade(user: &User, mes: &str) {
-    if let Err(cause) = user.dm(|m| m.content(mes)) {
+pub fn dm_facade(c: &Context, user: &User, mes: &str) {
+    if let Err(cause) = user.dm(c, |m| m.content(mes)) {
         println!("Error when direct messaging user: {:?}", cause);
     } else {
         println!("dmed: {}", mes);
     }
 }
 
-pub fn talk_facade(channel: &ChannelId, mes: &str) {
-    if let Err(cause) = channel.say(mes) {
+pub fn talk_facade(c: &Context, channel: &ChannelId, mes: &str) {
+    if let Err(cause) = channel.say(c, mes) {
         println!("Error when talking: {:?}", cause);
     } else {
         println!("talked: {}", mes);
     }
 }
 
-pub fn react_facade(mes: &Message, unicode: &str) {
-    if let Err(cause) = mes.react(ReactionType::from(unicode)) {
+pub fn react_facade(c: &Context, mes: &Message, unicode: &str) {
+    if let Err(cause) = mes.react(c, ReactionType::from(unicode)) {
         println!("Error when reacting: {:?}", cause);
     }
 }

@@ -2,7 +2,10 @@ use std::fmt;
 
 use rand::{ Rng, seq::SliceRandom };
 
-use serenity::model::{ channel::Message, id::UserId };
+use serenity::{
+    model::{ channel::Message, id::UserId },
+    prelude::Context,
+};
 
 use super::util::{ talk_facade, react_facade };
 use crate::meltomos;
@@ -268,37 +271,37 @@ impl fmt::Display for TurnResult {
     }
 }
 
-pub fn start(msg: &Message) -> bool {
+pub fn start(c: &Context, msg: &Message) -> bool {
     // TODO change bahavior according to talk sequence
     meltomos::update_seq(&msg.author.id, TalkSequence::ChooseDiffic);
-    react_facade(msg, "????");
-    talk_facade(&msg.channel_id, "I accept your challenge. choose difficulty.");
-    talk_facade(&msg.channel_id, "say e(easy) / n(normal) / h(hard)");
+    react_facade(c, msg, "????");
+    talk_facade(c, &msg.channel_id, "I accept your challenge. choose difficulty.");
+    talk_facade(c, &msg.channel_id, "say e(easy) / n(normal) / h(hard)");
     true
 }
 
-pub fn choose(msg: &Message, diffic: Difficulty) -> bool {
+pub fn choose(c: &Context, msg: &Message, diffic: Difficulty) -> bool {
     if !meltomos::conjecture_seq(&msg.author.id, TalkSequence::ChooseDiffic) { return false; }
     match diffic {
         Difficulty::Easy => {
-            react_facade(msg, "✅");
-            talk_facade(&msg.channel_id, "");
+            react_facade(c, msg, "✅");
+            talk_facade(c, &msg.channel_id, "");
         },
         Difficulty::Normal => {
-            react_facade(msg, "");
-            talk_facade(&msg.channel_id, "");
+            react_facade(c, msg, "");
+            talk_facade(c, &msg.channel_id, "");
         },
         Difficulty::Hard => {
-            react_facade(msg, "");
-            talk_facade(&msg.channel_id, "");
+            react_facade(c, msg, "");
+            talk_facade(c, &msg.channel_id, "");
         },
     }
     meltomos::update_seq(&msg.author.id, TalkSequence::InCombat(CombatStatus::init(diffic)));
-    talk_facade(&msg.channel_id, &*deal(&msg.author.id));
+    talk_facade(c, &msg.channel_id, &*deal(&msg.author.id));
     true
 }
 
-pub fn battle(msg: &Message) -> bool {
+pub fn battle(c: &Context, msg: &Message) -> bool {
     if let Some(TalkSequence::InCombat(mut combat_stat)) = meltomos::get_seq(&msg.author.id) {
         let mut player_card = Hand::interpret(&msg.content);
         for i in 0..HANDLEN - 1 {
@@ -307,22 +310,22 @@ pub fn battle(msg: &Message) -> bool {
             let result = combat_stat.judge(i, pcard);
             let (ph_after, ch_after) = (combat_stat.player_health, combat_stat.casko_health);
 
-            talk_facade(&msg.channel_id, &*format!("turn {}", i + 1));
-            talk_facade(&msg.channel_id, &*format!("[you : {}] vs [{} : me]", pcard, ccard));
-            talk_facade(&msg.channel_id, &*format!(" HP: {} -> {} -+-[{}]-+- HP: {} -> {}", ph_before, ph_after, result, ch_before, ch_after));
+            talk_facade(c, &msg.channel_id, &*format!("turn {}", i + 1));
+            talk_facade(c, &msg.channel_id, &*format!("[you : {}] vs [{} : me]", pcard, ccard));
+            talk_facade(c, &msg.channel_id, &*format!(" HP: {} -> {} -+-[{}]-+- HP: {} -> {}", ph_before, ph_after, result, ch_before, ch_after));
 
             if ph_after <= 0 && ch_after <= 0 {
-                draw(msg, &combat_stat.diffic);
+                draw(c, msg, &combat_stat.diffic);
             } else if ph_after <= 0 {
-                win(msg, &combat_stat.diffic);
+                win(c, msg, &combat_stat.diffic);
                 return true;
             } else if ch_after <= 0 {
-                lose(msg, &combat_stat.diffic);
+                lose(c, msg, &combat_stat.diffic);
                 return true;
             }
         }
         meltomos::update_seq(&msg.author.id, TalkSequence::InCombat(combat_stat));
-        talk_facade(&msg.channel_id, &*deal(&msg.author.id));
+        talk_facade(c, &msg.channel_id, &*deal(&msg.author.id));
         true
     } else {
         false
@@ -355,43 +358,43 @@ fn deal(id: &UserId) -> String {
     }
 }
 
-fn win(msg: &Message, stat: &Difficulty) {
+fn win(c: &Context, msg: &Message, stat: &Difficulty) {
     meltomos::update_seq(&msg.author.id, TalkSequence::None);
     match stat {
         Difficulty::Easy => {
-            talk_facade(&msg.channel_id, "yay!");
+            talk_facade(c, &msg.channel_id, "yay!");
         },
         Difficulty::Normal => {
-            talk_facade(&msg.channel_id, "yay!");
+            talk_facade(c, &msg.channel_id, "yay!");
 
         },
         Difficulty::Hard => {
-            talk_facade(&msg.channel_id, "yay!");
+            talk_facade(c, &msg.channel_id, "yay!");
 
         },
     }
 }
 
-fn lose(msg: &Message, stat: &Difficulty) {
+fn lose(c: &Context, msg: &Message, stat: &Difficulty) {
     meltomos::update_seq(&msg.author.id, TalkSequence::None);
     match stat {
         Difficulty::Easy => {
-            talk_facade(&msg.channel_id, "congrats!");
+            talk_facade(c, &msg.channel_id, "congrats!");
         },
         Difficulty::Normal => {
-            talk_facade(&msg.channel_id, "congrats!");
+            talk_facade(c, &msg.channel_id, "congrats!");
 
         },
         Difficulty::Hard => {
-            talk_facade(&msg.channel_id, "congrats!");
+            talk_facade(c, &msg.channel_id, "congrats!");
 
         },
     }
 }
 
-fn draw(msg: &Message, _stat: &Difficulty) {
+fn draw(c: &Context, msg: &Message, _stat: &Difficulty) {
     meltomos::update_seq(&msg.author.id, TalkSequence::None);
-    talk_facade(&msg.channel_id, "hikiwake");
+    talk_facade(c, &msg.channel_id, "hikiwake");
 }
 
 #[cfg(test)]
